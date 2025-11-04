@@ -1,1 +1,44 @@
 @import "tailwindcss";
+
+.bg-custom-gradient {
+  background: linear-gradient(
+    to left,
+    #3681C4 0%,
+    #8154C556 100%
+  );
+}
+.bg-ground-custom {
+  background-color: #3681C4;
+}
+
+
+
+.bg-custom-gradient-footer {
+  background: linear-gradient(
+    to left,
+    #FFD000 0%,
+    #FF9254 100%
+  );
+}
+
+@keyframes subtleBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px); /* ← más sutil que -10px o -6px */
+  }
+}
+.subtle-bounce {
+  animation: subtleBounce 1s ease-in-out infinite;
+}
+
+.subtle-bounce {
+  animation: subtleBounce 1.2s ease-in-out infinite;
+}
+
+/* Ocultar el ojo nativo del navegador */
+input::-ms-reveal,
+input::-webkit-textfield-decoration-container {
+  display: none !important;
+}
