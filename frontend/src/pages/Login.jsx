@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 // Importa tus imágenes
 import Background from '../assets/BackgroundLogin.svg';
 import kidImage from '../assets/Child.png';
@@ -16,9 +17,14 @@ export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Login attempt:', { username, password });
+
+    
+  };
+  const handleRegisterClick = () => {
+    navigate('/register'); 
   };
 
   return (
@@ -65,6 +71,7 @@ export default function Login() {
 
             {/* Botón de registro */}
             <button
+                onClick={handleRegisterClick}
                     className="absolute top-10 right-50 flex  gap-2 px-8 py-3 rounded-full border-2 border-white bg-[#3681C4] hover:bg-[#366bd6] transform hover:scale-105 transition-transform mt-4 sm:mt-6shadow-lg"
                     style={{
                         boxShadow: 'inset 0 3px 6px rgba(0,0,0,0.4), 0 4px 10px rgba(0,0,0,0.3)',
@@ -96,7 +103,7 @@ export default function Login() {
       </div>
 
       {/* Star */}
-      <div className="absolute top-20 sm:top-24 md:top-28 lg:top-40 left-12 sm:left-16 md:left-24 lg:left-32 z-20 subtle-bounce">
+      <div className="absolute top-20 sm:top-24 md:top-28 lg:top-40 left-12 sm:left-16 md:left-24 lg:left-32 z-20    ">
         <img 
           src={Star} 
           alt="Star" 
@@ -105,7 +112,7 @@ export default function Login() {
       </div>
 
       {/* Note-Book */}
-      <div className="absolute top-22 sm:top-26 md:top-30 lg:top-34 right-12 sm:right-16 md:right-24 lg:right-32 z-20 subtle-bounce">
+      <div className="absolute top-22 sm:top-26 md:top-30 lg:top-34 right-12 sm:right-16 md:right-24 lg:right-32 z-20    .">
         <img 
           src={notebook} 
           alt="notebook" 
@@ -114,69 +121,67 @@ export default function Login() {
       </div>
 
       {/* Imagen numeros 0,1,2 */}
-      <div className="absolute bottom-1/3 left-16 sm:left-24 md:left-32 lg:left-40 xl:left-48 transform -translate-x-1/2 z-20 subtle-bounce">
+      <div className="absolute bottom-2/8 left-16 sm:left-24 md:left-32 lg:left-40 xl:left-60 transform -translate-x-1/2 z-20  ">
         <img 
           src={Numbers102} 
           alt="Numbers102" 
-          className="w-32 h-28 sm:w-40 sm:h-36 md:w-52 md:h-44 lg:w-64 lg:h-52 xl:w-72 xl:h-60 object-contain"
+          className="w-32 h-28 sm:w-40 sm:h-36 md:w-52 md:h-44 lg:w-50 lg:h-50 xl:w-50 xl:h-50 object-contain"
         />
       </div>
 
-      {/* FORMULARIO DE LOGIN - CENTRADO */}
-      <div className="relative z-20 w-full max-w-xl sm:max-w-2xl md:max-w-2xl subtle-bounce">
-        {/* Borde naranja exterior */}
-        <div className="bg-custom-gradient-footer p-4 sm:p-4 md:p-4 rounded-3xl shadow-2xl ">
-         
-           
-              {/* Fondo verde */}
-               
-                <div
-                className="bg-cover bg-center rounded-2xl p-6 sm:p-8 md:p-10"
-                style={{ backgroundImage: `url(${fondo})` }}
-                >
-  
-                
-                {/* Título Iniciar */}
-                <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-center mb-6 sm:mb-8 " style={{
-                  fontFamily: 'Kavoon, cursive',
-                   textShadow: `
-                            -10px 0px #262A51`,
-                  color: '#FFB212',
-                 
-                  filter: 'url(#inner-shadow)'
-                }}>
-                  Iniciar
-                </h2>
+   {/* FORMULARIO DE LOGIN  */}
+                <div className="relative z-20 w-[90%] max-w-md sm:max-w-lg md:max-w-xl lg:max-w-xl ">
+                {/* Borde naranja exterior */}
+                <div className="bg-custom-gradient-footer p-3 sm:p-4 md:p-5 rounded-3xl shadow-2xl">
+                    {/* Fondo verde */}
+                    <div
+                    className="bg-cover bg-center rounded-2xl p-5 sm:p-6 md:p-8"
+                    style={{ backgroundImage: `url(${fondo})` }}
+                    >
+                    {/* Título Iniciar */}
+                    <h2
+                        className="text-3xl sm:text-4xl md:text-5xl font-black text-center mb-5 sm:mb-7"
+                        style={{
+                        fontFamily: 'Kavoon, cursive',
+                        textShadow: `-8px 0px #262A51`,
+                        color: '#FFB212',
+                        filter: 'url(#inner-shadow)',
+                        }}
+                    >
+                        Iniciar
+                    </h2>
 
-                {/* Formulario */}
-                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                  
-             {/* Campo Usuario */}
-                <div>
-                <label className="block text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3" style={{
-                    fontFamily: 'Kavoon, cursive',
-                    textShadow: `-5px 0px #262A51`,
-                    color: '#FFB212',
-                }}>
-                    usuario
-                </label>
-                <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    autoComplete="username"
-                    className="w-full px-4 py-3 sm:py-4 rounded-xl border-0 focus:outline-none focus:ring-4 focus:ring-yellow-400 text-3xl sm:text-3xl md:text-3xl font-semibold bg-gray-100"
-                    style={{ fontFamily: 'Kavoon, cursive' }}
-                />
-                </div>
-
-                {/* Campo Contraseña */}
-                        <div className="relative">
+                    {/* Formulario */}
+                    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 md:space-y-6">
+                        {/* Campo Usuario */}
+                        <div>
                         <label
-                            className="block text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3"
+                            className="block text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2"
                             style={{
                             fontFamily: 'Kavoon, cursive',
-                            textShadow: `-5px 0px #262A51`,
+                            textShadow: `-4px 0px #262A51`,
+                            color: '#FFB212',
+                            }}
+                        >
+                            usuario
+                        </label>
+                        <input
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            autoComplete="username"
+                            className="w-full px-3 py-2 sm:px-4 sm:py-3 rounded-xl border-0 focus:outline-none focus:ring-4 focus:ring-yellow-400 text-2xl sm:text-2xl md:text-3xl font-semibold bg-gray-100"
+                            style={{ fontFamily: 'Kavoon, cursive' }}
+                        />
+                        </div>
+
+                        {/* Campo Contraseña */}
+                        <div className="relative">
+                        <label
+                            className="block text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2"
+                            style={{
+                            fontFamily: 'Kavoon, cursive',
+                            textShadow: `-4px 0px #262A51`,
                             color: '#FFB212',
                             }}
                         >
@@ -188,50 +193,84 @@ export default function Login() {
                             type={showPassword ? 'text' : 'password'}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-3 sm:py-4 rounded-xl border-0 focus:outline-none focus:ring-4 focus:ring-yellow-400 text-3xl sm:text-3xl md:text-3xl font-semibold bg-gray-100 pr-14"
+                            className="w-full px-3 py-2 sm:px-4 sm:py-3 rounded-xl border-0 focus:outline-none focus:ring-4 focus:ring-yellow-400 text-2xl sm:text-2xl md:text-3xl font-semibold bg-gray-100 pr-14"
                             style={{
                                 fontFamily: 'Kavoon, cursive',
                             }}
                             placeholder=""
                             />
 
-                            {/* Botón para mostrar/ocultar */}
+                            {/* Ícono visible solo cuando hay texto */}
+                            {password && (
                             <button
-                            type="button"
-                            onMouseDown={(e) => e.preventDefault()} 
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute inset-y-0 right-3 flex items-center"
+                                type="button"
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-3 flex items-center transition-opacity duration-300"
                             >
-                            {showPassword ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-9 h-9 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.682-7 .885-2.577 2.8-4.746 5.253-6.125M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
+                                {showPassword ? (
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="w-8 h-8 sm:w-9 sm:h-9 text-yellow-600"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.682-7 .885-2.577 2.8-4.746 5.253-6.125M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                    />
+                                    <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M3 3l18 18"
+                                    />
                                 </svg>
-                            ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-9 h-9 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                ) : (
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="w-8 h-8 sm:w-9 sm:h-9 text-yellow-600"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                    />
+                                    <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                    />
                                 </svg>
-                            )}
+                                )}
                             </button>
+                            )}
                         </div>
                         </div>
 
+                        {/* Botón Entrar */}
+                        <button
+                        type="submit"
+                        className="w-full bg-yellow-400 hover:bg-yellow-500 text-green-800 font-black text-2xl sm:text-3xl py-2 sm:py-3 rounded-xl border-4 border-yellow-600 shadow-lg transform hover:scale-105 transition-transform mt-3 sm:mt-5"
+                        style={{
+                            fontFamily: 'Kavoon, cursive',
+                        }}
+                        >
+                        Entrar
+                        </button>
+                    </form>
+                    </div>
+                </div>
+                </div>
 
-                  {/* Botón Entrar */}
-                  <button
-                    type="submit"
-                    className="w-full bg-yellow-400 hover:bg-yellow-500 text-green-800 font-black text-2xl sm:text-3xl md:text-4xl py-3 sm:py-4 rounded-xl border-4 border-yellow-600 shadow-lg transform hover:scale-105 transition-transform mt-4 sm:mt-6"
-                    style={{
-                      fontFamily: 'Kavoon, cursive'
-                    }}
-                  >
-                    Entrar
-                  </button>
-                </form>
-              </div>
-        </div>
-      </div>
 
       {/* Imagen kid */}
       <div className="absolute bottom-12 sm:bottom-16 md:bottom-20 lg:bottom-24 xl:bottom-28 right-8 sm:right-12 md:right-16 lg:right-20 xl:right-24 z-50">
@@ -246,7 +285,7 @@ export default function Login() {
       <div className="absolute bottom-0 left-0 right-0 z-10 bg-custom-gradient-footer py-6 sm:py-8 md:py-10 lg:py-14 xl:py-16 px-4 md:px-10 text-white text-center">
         
         {/* Imagen Books */}
-        <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 lg:bottom-10 xl:bottom-12 left-20 sm:left-28 md:left-40 lg:left-52 xl:left-64 transform -translate-x-1/2 z-20 subtle-bounce">
+        <div className="absolute bottom-2 sm:bottom-4 md:bottom-6 lg:bottom-8xl:bottom-8 left-20 sm:left-28 md:left-40 lg:left-52 xl:left-64 transform -translate-x-1/2 z-20  ">
           <img 
             src={Books} 
             alt="Books" 
@@ -255,7 +294,7 @@ export default function Login() {
         </div>
 
         {/* Imagen resta */}
-        <div className="absolute bottom-3 sm:bottom-4 md:bottom-5 lg:bottom-6 xl:bottom-8 left-1/2 transform -translate-x-1/2 z-20 ">
+        <div className="absolute bottom-3 sm:bottom-4 md:bottom-5 lg:bottom-6 xl:bottom-8 left-1/2 transform -translate-x-1/2 z-20   ">
           <img 
             src={Resta} 
             alt="Resta" 
@@ -264,7 +303,7 @@ export default function Login() {
         </div>
 
         {/* Imagen numeros 8,3,7 */}
-        <div className="absolute bottom-4 sm:bottom-5 md:bottom-6 lg:bottom-8 xl:bottom-10 right-4 sm:right-6 md:right-8 lg:right-12 xl:right-16 z-20 subtle-bounce">
+        <div className="absolute bottom-4 sm:bottom-5 md:bottom-6 lg:bottom-8 xl:bottom-10 right-4 sm:right-6 md:right-8 lg:right-12 xl:right-16 z-20  ">
           <img 
             src={Numbers837} 
             alt="Numbers" 
