@@ -12,7 +12,8 @@ CREATE TABLE users (
     username VARCHAR(50) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(100) NOT NULL,
-    age INT NOT NULL,
+    gender ENUM('male', 'female') DEFAULT NULL,
+    birth_date DATE NOT NULL,
     date_registered DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
