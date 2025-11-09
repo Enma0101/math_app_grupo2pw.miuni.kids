@@ -33,12 +33,13 @@ export default function Login() {
       <img 
         src={Background} 
         alt="Background" 
+        draggable={false}
         className="absolute w-full h-full object-cover object-center"
       />
       
-      <div className="absolute top-0 left-0 right-0 z-20 bg-ground-custom py-4 sm:py-6 md:py-12 lg:py-20 px-4 md:px-10"> 
+      <div className="absolute top-0 left-0 right-0 z-20 bg-ground-custom py-4 sm:py-6 md:py-12 lg:py-25 px-4 md:px-10"> 
         {/* Navbar */}
-        <nav className="absolute top-0 left-0 right-0 z-20 bg-custom-gradient py-4 sm:py-6 md:py-10 lg:py-20 px-4 md:px-10">
+        <nav className="absolute top-0 left-0 right-0 z-20 bg-custom-gradient py-4 sm:py-6 md:py-10 lg:py-25 px-4 md:px-10">
             {/* Logo y Título */}
             <div className="absolute max-w-7xl mx-auto flex  top-3 left-30 justify-between">
             
@@ -81,6 +82,7 @@ export default function Login() {
                    
                      <img
                         src={plus}
+                        draggable={false}
                         alt="Plus"
                         className="items-center w-10 h-10 object-contain translate-y-2"
                         />
@@ -103,18 +105,20 @@ export default function Login() {
       </div>
 
       {/* Star */}
-      <div className="absolute top-20 sm:top-24 md:top-28 lg:top-40 left-12 sm:left-16 md:left-24 lg:left-32 z-20    ">
+      <div className="absolute top-20 sm:top-24 md:top-28 lg:top-40 left-12 sm:left-16 md:left-24 lg:left-32 z-20  subtle-bounce  ">
         <img 
           src={Star} 
+          draggable={false}
           alt="Star" 
           className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 object-contain"
         />
       </div>
 
       {/* Note-Book */}
-      <div className="absolute top-22 sm:top-26 md:top-30 lg:top-34 right-12 sm:right-16 md:right-24 lg:right-32 z-20    .">
+      <div className="absolute top-22 sm:top-26 md:top-30 lg:top-34 right-12 sm:right-16 md:right-24 lg:right-32 z-20  subtle-bounce  .">
         <img 
           src={notebook} 
+          draggable={false}
           alt="notebook" 
           className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 object-contain"
         />
@@ -124,6 +128,7 @@ export default function Login() {
       <div className="absolute bottom-2/8 left-16 sm:left-24 md:left-32 lg:left-40 xl:left-60 transform -translate-x-1/2 z-20  ">
         <img 
           src={Numbers102} 
+          draggable={false}
           alt="Numbers102" 
           className="w-32 h-28 sm:w-40 sm:h-36 md:w-52 md:h-44 lg:w-50 lg:h-50 xl:w-50 xl:h-50 object-contain"
         />
@@ -276,6 +281,7 @@ export default function Login() {
       <div className="absolute bottom-12 sm:bottom-16 md:bottom-20 lg:bottom-24 xl:bottom-28 right-8 sm:right-12 md:right-16 lg:right-20 xl:right-24 z-50">
         <img 
           src={kidImage} 
+          draggable={false}
           alt="kid with pencil" 
           className="w-48 h-48 sm:w-56 sm:h-56 md:w-72 md:h-72 lg:w-96 lg:h-96 xl:w-[28rem] xl:h-[28rem] 2xl:w-[32rem] 2xl:h-[32rem] object-contain"
         />
@@ -289,6 +295,7 @@ export default function Login() {
           <img 
             src={Books} 
             alt="Books" 
+            draggable={false}
             className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 lg:w-56 lg:h-56 xl:w-64 xl:h-64 object-contain"
           />
         </div>
@@ -296,8 +303,10 @@ export default function Login() {
         {/* Imagen resta */}
         <div className="absolute bottom-3 sm:bottom-4 md:bottom-5 lg:bottom-6 xl:bottom-8 left-1/2 transform -translate-x-1/2 z-20   ">
           <img 
+          
             src={Resta} 
             alt="Resta" 
+            draggable={false}
             className="w-40 h-16 sm:w-52 sm:h-20 md:w-64 md:h-24 lg:w-80 lg:h-28 xl:w-96 xl:h-32 2xl:w-[28rem] 2xl:h-36 object-contain"
           />
         </div>
@@ -306,6 +315,7 @@ export default function Login() {
         <div className="absolute bottom-4 sm:bottom-5 md:bottom-6 lg:bottom-8 xl:bottom-10 right-4 sm:right-6 md:right-8 lg:right-12 xl:right-16 z-20  ">
           <img 
             src={Numbers837} 
+            draggable={false}
             alt="Numbers" 
             className="w-24 h-20 sm:w-32 sm:h-24 md:w-40 md:h-32 lg:w-48 lg:h-40 xl:w-56 xl:h-48 object-contain"
           />

@@ -123,13 +123,14 @@ export default function Register() {
       {/* Imagen de fondo */}
       <img 
         src={Background} 
+        draggable={false}
         alt="Background" 
         className="absolute w-full h-full object-cover object-center"
       />
       
-      <div className="absolute top-0 left-0 right-0 z-20 bg-ground-custom py-4 sm:py-6 md:py-12 lg:py-20 px-4 md:px-10"> 
+      <div className="absolute top-0 left-0 right-0 z-20 bg-ground-custom py-4 sm:py-6 md:py-12 lg:py-25 px-4 md:px-10"> 
         {/* Navbar */}
-        <nav className="absolute top-0 left-0 right-0 z-20 bg-custom-gradient py-4 sm:py-6 md:py-10 lg:py-20 px-4 md:px-10">
+        <nav className="absolute top-0 left-0 right-0 z-20 bg-custom-gradient py-4 sm:py-6 md:py-10 lg:py-25 px-4 md:px-10">
           {/* Logo y Título */}
           <div className="absolute max-w-7xl mx-auto flex top-3 left-30 justify-between">
             <svg width="0" height="0">
@@ -162,6 +163,7 @@ export default function Register() {
       <div className="absolute top-20 sm:top-24 md:top-28 lg:top-40 left-12 sm:left-16 md:left-40 lg:left-50 z-20 ">
         <img 
           src={Stars} 
+          draggable={false}
           alt="Star" 
           className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 object-contain"
         />
@@ -170,7 +172,8 @@ export default function Register() {
          {/* Calculadora */}
       <div className="absolute bottom-20 sm:bottom-20 md:bottom-20 lg:bottom-20 left-12 sm:left-20 md:left-20 lg:left-20 z-20 ">
         <img 
-          src={Calculater} 
+          src={Calculater}
+          draggable={false} 
           alt="Star" 
           className="w-20 h-20 sm:w-80 sm:h-80 md:w-80 md:h-80 lg:w-80 lg:h-80 xl:w-80 xl:h-80 object-contain"
         />
@@ -180,6 +183,7 @@ export default function Register() {
       <div className="absolute bottom-14 sm:bottom-16 md:bottom-20 lg:bottom-24 right-12 sm:right-16 md:right-24 lg:right-32 z-20 ">
         <img 
           src={notebook} 
+          draggable={false}
           alt="notebook" 
           className="w-20 h-20 sm:w-70 sm:h-70 md:w-70 md:h-70 lg:w-70 lg:h-70 xl:w-70 xl:h-70 object-contain"
         />
@@ -189,6 +193,7 @@ export default function Register() {
       <div className="absolute top-14 sm:top-16 md:top-30 lg:top-60 right-20 sm:right-30 md:right-50 lg:right-60 z-60 ">
         <img 
           src={Numbers102} 
+          draggable={false}
           alt="Numbers102" 
           className="w-32 h-28 sm:w-40 sm:h-36 md:w-52 md:h-44 lg:w-50 lg:h-50 xl:w-50 xl:h-50 object-contain"
         />
@@ -199,13 +204,14 @@ export default function Register() {
       <div className="absolute top-0 sm:top-0 md:top-0 lg:top-0 right-0 sm:right-15 md:right-20 lg:right-20 z-60 ">
         <img 
           src={symbol} 
+          draggable={false}
           alt="symbol" 
           className="w-32 h-28 sm:w-40 sm:h-36 md:w-52 md:h-44 lg:w-50 lg:h-50 xl:w-50 xl:h-50 object-contain"
         />
       </div>
 
     {/* FORMULARIO DE Registro */}
-      <div className="relative z-50 top-16 w-[90%] max-w-md sm:max-w-5xl md:max-w-5xl lg:max-w-5xl ">
+      <div className="relative z-50 top-16 w-[90%] max-w-md sm:max-w- md:max-w-5xl lg:max-w-5xl ">
         {/* Borde naranja exterior */}
         <div className="bg-custom-gradient-footer p-3 sm:p-4 md:p-5 rounded-3xl shadow-2xl">
           {/* Fondo verde */}
@@ -243,6 +249,7 @@ export default function Register() {
                   </label>
                   <input
                     type="text"
+                    pattern="[A-Za-z ]+"
                     placeholder="Ingresa tu nombre"
                     value={nombre}
                     onChange={(e) => {
@@ -315,42 +322,7 @@ export default function Register() {
                   </label>
 
                   <div className="grid grid-cols-3 gap-2">
-                    {/* Mes */}
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="Mes"
-                        value={mes}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "");
-                          setErrorMes("");
-                          if (value === "" || (Number(value) >= 1 && Number(value) <= 12)) {
-                            setMes(value);
-                            limpiarError('mes');
-                          } else {
-                            setErrorMes("El mes debe estar entre 1 y 12");
-                          }
-                        }}
-                        maxLength={2}
-                        className={`w-full px-3 py-3 rounded-lg border-0 focus:outline-none focus:ring-4 focus:ring-yellow-400 text-lg font-semibold bg-white ${
-                          errores.mes ? 'ring-2 ring-red-500' : ''
-                        }`}
-                        style={{ fontFamily: "Kavoon, cursive" }}
-                      />
-                      {errorMes && (
-                        <p className="text-red-500 text-md font-semibold mt-1" style={{
-                          fontFamily: "Kavoon, cursive",
-                        }}>{errorMes}</p>
-                      )}
-                      {errores.mes && !errorMes && (
-                        <p className="text-red-500 text-md font-semibold mt-1" style={{
-                          fontFamily: "Kavoon, cursive",
-                        }}>
-                          {errores.mes}
-                        </p>
-                      )}
-                    </div>
-
+                
                     {/* Día */}
                     <div>
                       <input
@@ -360,11 +332,29 @@ export default function Register() {
                         onChange={(e) => {
                           const value = e.target.value.replace(/\D/g, "");
                           setErrorDia("");
-                          if (value === "" || (Number(value) >= 1 && Number(value) <= 31)) {
+                          
+                          if (value === "") {
+                            setDia(value);
+                            limpiarError('dia');
+                          } else if (value.length === 1) {
+                            // Si es un solo dígito, permitir cualquier número 0-9
                             setDia(value);
                             limpiarError('dia');
                           } else {
-                            setErrorDia("El día debe estar entre 1 y 31");
+                            // Si son dos dígitos, validar el rango
+                            const numValue = Number(value);
+                            if (numValue >= 1 && numValue <= 31) {
+                              setDia(value);
+                              limpiarError('dia');
+                            } else {
+                              setErrorDia("El día debe estar entre 1 y 31");
+                            }
+                          }
+                        }}
+                        onBlur={(e) => {
+                          // Al perder el foco, agregar cero a la izquierda si es un solo dígito
+                          if (dia && dia.length === 1) {
+                            setDia(dia.padStart(2, '0'));
                           }
                         }}
                         maxLength={2}
@@ -383,6 +373,60 @@ export default function Register() {
                           fontFamily: "Kavoon, cursive",
                         }}>
                           {errores.dia}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Mes */}
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Mes"
+                        value={mes}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, "");
+                          setErrorMes("");
+                          
+                          if (value === "") {
+                            setMes(value);
+                            limpiarError('mes');
+                          } else if (value.length === 1) {
+                            // Si es un solo dígito, permitir cualquier número 0-9
+                            setMes(value);
+                            limpiarError('mes');
+                          } else {
+                            // Si son dos dígitos, validar el rango
+                            const numValue = Number(value);
+                            if (numValue >= 1 && numValue <= 12) {
+                              setMes(value);
+                              limpiarError('mes');
+                            } else {
+                              setErrorMes("El mes debe estar entre 1 y 12");
+                            }
+                          }
+                        }}
+                        onBlur={(e) => {
+                          // Al perder el foco, agregar cero a la izquierda si es un solo dígito
+                          if (mes && mes.length === 1) {
+                            setMes(mes.padStart(2, '0'));
+                          }
+                        }}
+                        maxLength={2}
+                        className={`w-full px-3 py-3 rounded-lg border-0 focus:outline-none focus:ring-4 focus:ring-yellow-400 text-lg font-semibold bg-white ${
+                          errores.mes ? 'ring-2 ring-red-500' : ''
+                        }`}
+                        style={{ fontFamily: "Kavoon, cursive" }}
+                      />
+                      {errorMes && (
+                        <p className="text-red-500 text-md font-semibold mt-1" style={{
+                          fontFamily: "Kavoon, cursive",
+                        }}>{errorMes}</p>
+                      )}
+                      {errores.mes && !errorMes && (
+                        <p className="text-red-500 text-md font-semibold mt-1" style={{
+                          fontFamily: "Kavoon, cursive",
+                        }}>
+                          {errores.mes}
                         </p>
                       )}
                     </div>

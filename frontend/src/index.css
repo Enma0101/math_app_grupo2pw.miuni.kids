@@ -1,14 +1,57 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Sansation';
+  src: url('/src/assets/fonts/Sansation-Bold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
 .bg-custom-gradient {
   background: linear-gradient(
     to left,
     #3681C4 0%,
-    #8154C556 100%
+    #8154C599 100%
   );
+}
+
+.bg-custom-gradient-girl {
+  background: linear-gradient(
+    to left,
+    #5E36C4 0%,
+    #C3929359 100%
+  );
+}
+
+
+.bg-custom-gradient-girl2 {
+  background: linear-gradient(
+    to right,
+    #3681C4 0%,
+    #8054AE 100%,
+    #B5359E 100%,
+    #EC148E 100%
+  );
+}
+
+.bg-ground-custom-selector {
+  background-color: #21b94aff;
+}
+
+
+
+.bg-ground-custom2 {
+  background-color: #00C7DB;
+}
+.bg-ground-custom2girl {
+  background-color: #FB0000;
 }
 .bg-ground-custom {
   background-color: #3681C4;
+}
+.bg-ground-custom-girl {
+  background-color: #E50E11;
 }
 
 
@@ -20,6 +63,12 @@
     #FF9254 100%
   );
 }
+
+
+.bg-custom-gradient-letter {
+  background: linear-gradient(to right, #8154C5, #FFB212);
+}
+
 
 @keyframes subtleBounce {
   0%, 100% {
@@ -34,7 +83,7 @@
 }
 
 .subtle-bounce {
-  animation: subtleBounce 1.2s ease-in-out infinite;
+  animation: subtleBounce 2s ease-in-out infinite;
 }
 
 /* Ocultar el ojo nativo del navegador */
