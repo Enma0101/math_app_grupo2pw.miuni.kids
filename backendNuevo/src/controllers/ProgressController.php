@@ -24,6 +24,9 @@ class ProgressController {
 
     $userId = (int)$b['user_id'];
     $progress = UserProgress::firstOrCreate(['user_id'=>$userId]);
+    // Normalizar valores nulos
+    if ($progress->total_stars === null) $progress->total_stars = 0;
+    if ($progress->current_streak === null) $progress->current_streak = 0;
 
     // Si te envían 'correct_last' y 'level_id', calculamos estrellas:
     $addedStars = 0;

@@ -28,6 +28,10 @@ class ExerciseController
         for ($i = 0; $i < 8; $i++) {
             $a = rand(1000, 9999);
             $b = rand(1000, 9999);
+            if ($type === 'Restas' && $a < $b) {
+                // Asegurar restas no negativas: mayor - menor
+                [$a, $b] = [$b, $a];
+            }
             $correct = ($type === 'Sumas') ? ($a + $b) : ($a - $b);
             $items[] = [
                 'level_id' => $levelId,
@@ -47,7 +51,7 @@ class ExerciseController
         $b = $req->getParsedBody();
 
         // Validaciones mínimas y de rango 4 dígitos
-        foreach (['user_id', 'level_id', 'operation_type', 'number1', 'number2', 'correct_result', 'user_answer'] as $k) {
+        foreach (['user_id', 'level_id', 'operation_type', 'number1', 'number2', 'user_answer'] as $k) {
             if (!isset($b[$k]))
                 return JR::error($res, "Campo requerido: $k", 422);
         }
@@ -57,16 +61,24 @@ class ExerciseController
         if (!V::intBetween($b['number1'], 1000, 9999) || !V::intBetween($b['number2'], 1000, 9999)) {
             return JR::error($res, 'number1/number2 deben ser de 4 dígitos (1000-9999)', 422);
         }
-
-        $isCorrect = ((int) $b['user_answer'] === (int) $b['correct_result']);
+        // Recalcular el resultado correcto en el servidor
+        $n1 = (int)$b['number1'];
+        $n2 = (int)$b['number2'];
+        $op = $b['operation_type'];
+        if ($op === 'Restas' && $n1 < $n2) {
+            // Validar que no haya restas negativas (según requisito)
+            return JR::error($res, 'Para Restas, number1 debe ser >= number2', 422);
+        }
+        $correct = ($op === 'Sumas') ? ($n1 + $n2) : ($n1 - $n2);
+        $isCorrect = ((int) $b['user_answer'] === (int) $correct);
 
         $record = UserExercise::create([
             'user_id' => (int) $b['user_id'],
             'level_id' => (int) $b['level_id'],
             'operation_type' => $b['operation_type'],
-            'number1' => (int) $b['number1'],
-            'number2' => (int) $b['number2'],
-            'correct_result' => (int) $b['correct_result'],
+            'number1' => $n1,
+            'number2' => $n2,
+            'correct_result' => (int) $correct,
             'user_answer' => (int) $b['user_answer'],
             'is_correct' => $isCorrect,
             'solved_at' => date('Y-m-d H:i:s'),
