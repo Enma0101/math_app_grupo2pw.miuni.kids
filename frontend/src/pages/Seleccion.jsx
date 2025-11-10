@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { useNavigate , useLocation, Navigate } from "react-router-dom";
+import { LogOut, Undo } from "lucide-react";
 
 // Importa tus imágenes
 import Background from "../assets/BackgroundLogin.svg";
@@ -16,63 +16,24 @@ import StarYG from "../assets/StarYG.png";
 import StarP from "../assets/StarPink.png";
 import StarG from "../assets/StarGreen.png";
 
-export default function Home() {
-  const [genero, setGenero] = useState("mujer"); // Estado para almacenar el género seleccionado
-  const [userName, setUserName] = useState("Christopher");
+export default function Seleccion() {
+ // Estado para almacenar el género seleccionado
+ 
+  const [userName, setUserName] = useState("Enmanuel");
   const [TotalStar, setTotalStar] = useState(100);
+  const { state } = useLocation();
   const navigate = useNavigate();
-  const [kindOperation, setkindOperation] = useState("Sumas");
+  const { kindOperation, genero } = state || {};
 
-  // 'mujer' o 'hombre'
 
-  const handleActivity = (kindOperation) => {
-    setkindOperation(kindOperation);
-
-    navigate("/Seleccion", {
-      state: { kindOperation: kindOperation, genero: genero },
+  const handleActivity = (nivel) => {
+    navigate("/Game", {
+      state: { kindOperation: kindOperation, genero: genero, nivel: nivel },
     });
   };
 
-  {
-    /*efecto de escribir */
-  }
-  const TypewriterText = ({
-    text,
-    speed = 50,
-    delay = 0,
-    className,
-    style,
-  }) => {
-    const [displayedText, setDisplayedText] = useState("");
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [started, setStarted] = useState(false);
+  // 'mujer' o 'hombre'
 
-    useEffect(() => {
-      const delayTimer = setTimeout(() => {
-        setStarted(true);
-      }, delay);
-
-      return () => clearTimeout(delayTimer);
-    }, [delay]);
-
-    useEffect(() => {
-      if (!started || currentIndex >= text.length) return;
-
-      const timer = setTimeout(() => {
-        setDisplayedText((prev) => prev + text[currentIndex]);
-        setCurrentIndex((prev) => prev + 1);
-      }, speed);
-
-      return () => clearTimeout(timer);
-    }, [currentIndex, text, speed, started]);
-
-    return (
-      <span className={className} style={style}>
-        {displayedText}
-        {currentIndex < text.length && <span className="animate-pulse">▌</span>}
-      </span>
-    );
-  };
   return (
     <div className="h-screen bg-gradient-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {/* Imagen de fondo */}
@@ -179,30 +140,85 @@ export default function Home() {
 
             <div className="flex-1 flex justify-center items-center">
               {genero === "mujer" ? (
+               kindOperation === "Sumas" ? (
                 <h1
-                  className="sm:text-3xl md:text-5xl lg:text-7xl font-bold"
+                  className="sm:text-3xl md:text-5xl lg:text-6xl "
                   style={{
                     fontFamily: "Kavoon, cursive",
-                    color: "#FFFFFF",
-                    textShadow: "-10px 0px #852526",
-                    filter: "url(#inner-shadow)",
+                    color: "#852526",
                   }}
                 >
-                  Bienvenido
+                  ¡Vamos a Sumar!{" "}
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: "25px",
+                      color: "#ffff",
+                    }}
+                  >
+                    ¡Vamos a Sumar!
+                  </span>
                 </h1>
+                ) : (<h1
+                  className="sm:text-3xl md:text-5xl lg:text-6xl "
+                  style={{
+                    fontFamily: "Kavoon, cursive",
+                    color: "#852526",
+                  }}
+                >
+                  ¡Vamos a Restar!{" "}
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: "25px",
+                      color: "#ffff",
+                    }}
+                  >
+                    ¡Vamos a Restar!
+                  </span>
+                </h1>)
+
+
               ) : (
+                kindOperation === "Sumas" ? (
                 <h1
-                  className="sm:text-3xl md:text-5xl lg:text-7xl font-bold"
+                  className="sm:text-3xl md:text-5xl lg:text-6xl "
                   style={{
                     fontFamily: "Kavoon, cursive",
                     color: "#FFB212",
-                    textShadow: "-10px 0px #262A51",
-                    filter: "url(#inner-shadow)",
                   }}
                 >
-                  Bienvenido
+                  ¡Vamos a Sumar!{" "}
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: "25px",
+                      color: "#262A51",
+                    }}
+                  >
+                    ¡Vamos a Sumar!
+                  </span>
                 </h1>
+                ) : (<h1
+                  className="sm:text-3xl md:text-5xl lg:text-6xl "
+                  style={{
+                    fontFamily: "Kavoon, cursive",
+                    color: "#FFB212",
+                  }}
+                >
+                  ¡Vamos a Restar!{" "}
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: "25px",
+                      color: "#262A51",
+                    }}
+                  >
+                    ¡Vamos a Restar!
+                  </span>
+                </h1>)
               )}
+
             </div>
 
             <div className="flex-1 flex justify-end items-start">
@@ -239,7 +255,7 @@ export default function Home() {
       {/* Imagen numeros 2*/}
 
       {genero === "mujer" ? (
-        <div className="relative top-95 right-100  z-20  ">
+        <div className="relative top-80 right-100  z-20  ">
           <img
             src={Number1}
             draggable={false}
@@ -248,7 +264,7 @@ export default function Home() {
           />
         </div>
       ) : (
-        <div className="relative top-80 right-100  z-20  ">
+        <div className="relative top-75 right-100  z-20  ">
           <img
             src={Number2}
             draggable={false}
@@ -260,82 +276,43 @@ export default function Home() {
 
       {/* Tarjeta de bienvenida */}
       {genero === "mujer" ? (
-        <div className="rounded-3xl p-8 mb-8 relative top-45 left-10 ">
+        <div className="rounded-3xl p-8 mb-8 relative top-40  ">
           {/* Mensaje de bienvenida */}
           <div>
             <h2
-              className="text-5xl md:text-5xl  mb-3"
+              className="text-5xl md:text-7xl  mb-3"
               style={{
                 fontFamily: "Kavoon, cursive",
                 color: "#5F005C",
                 filter: "url(#inner-shadow)",
               }}
             >
-              <TypewriterText text={`¡Bienvenido! "${userName}"`} speed={50} />
+              Niveles {kindOperation}
             </h2>
-            <p
-              className="text-4xl md:text-5xl  mb-3"
-              style={{
-                color: "#5F005C",
-                fontFamily: "Kavoon, cursive",
-                filter: "url(#inner-shadow)",
-              }}
-            >
-              <TypewriterText
-                text="me encantaría saber que "
-                speed={40}
-                delay={1800}
-              />
-              <span style={{ display: "block" }}>
-                <TypewriterText
-                  text="realizaremos hoy?"
-                  speed={40}
-                  delay={2700}
-                />
-              </span>
-            </p>
+            
           </div>
         </div>
       ) : (
-        <div className="rounded-3xl p-8 mb-8 relative top-35 left-10 ">
+        <div className="rounded-3xl p-8 mb-8 relative top-40  ">
           {/* Mensaje de bienvenida */}
           <div>
             <h2
-              className="text-5xl md:text-5xl  mb-3"
+              className="text-5xl md:text-7xl  mb-3"
               style={{
                 fontFamily: "Kavoon, cursive",
                 color: "#262A51",
                 filter: "url(#inner-shadow)",
               }}
             >
-              <TypewriterText text={`¡Bienvenido! "${userName}"`} speed={50} />
+              Niveles {kindOperation}
             </h2>
-            <p
-              className="text-4xl md:text-5xl  mb-3"
-              style={{
-                color: "#262A51",
-                fontFamily: "Kavoon, cursive",
-                filter: "url(#inner-shadow)",
-              }}
-            >
-              <TypewriterText
-                text="me encantaría saber que "
-                speed={40}
-                delay={1800}
-              />
-              <span style={{ display: "block" }}>
-                <TypewriterText
-                  text="realizaremos hoy?"
-                  speed={40}
-                  delay={2700}
-                />
-              </span>
-            </p>
+            
           </div>
         </div>
       )}
+
       {genero === "mujer" ? (
-        <div className="relative bottom-20 left-140 bg-ground-custom2girl bg-custom-gradient-girl2 rounded-3xl p-8 h-42 w-80 shadow-4xl z-40 subtle-bounce  ">
+        <div className="relative bottom-15 left-140 bg-ground-custom2girl bg-custom-gradient-girl2 rounded-3xl p-8 h-42 w-80 shadow-4xl z-40 subtle-bounce  ">
           {/* Título de la tarjeta */}
           <h3
             className=" relative bottom-5 text-2xl md:text-4xl  mb-2"
@@ -362,7 +339,7 @@ export default function Home() {
           </h2>
         </div>
       ) : (
-        <div className="relative bottom-30 left-140 bg-ground-custom2 bg-custom-gradient-girl2 rounded-3xl p-8 h-42 w-80 shadow-4xl z-40  subtle-bounce ">
+        <div className="relative bottom-20 left-140 bg-ground-custom2 bg-custom-gradient-girl2 rounded-3xl p-8 h-42 w-80 shadow-4xl z-40 subtle-bounce ">
           {/* Título de la tarjeta */}
           <h3
             className=" relative bottom-5 text-2xl md:text-4xl  mb-2"
@@ -397,14 +374,14 @@ export default function Home() {
           src={StarPY}
           draggable={false}
           alt="Numbers"
-          className="relative bottom-80 left-180 z-50 w-24 h-20 xl:w-50 xl:h-50 object-contain"
+          className="relative bottom-75 left-180 z-50 w-24 h-20 xl:w-50 xl:h-50 object-contain "
         />
       ) : (
         <img
           src={StarYG}
           draggable={false}
           alt="Numbers"
-          className="relative bottom-85 left-180 z-50 w-24 h-20 xl:w-50 xl:h-50 object-contain"
+          className="relative bottom-75 left-180 z-50 w-24 h-20 xl:w-50 xl:h-50 object-contain"
         />
       )}
 
@@ -415,22 +392,22 @@ export default function Home() {
           src={StarG}
           draggable={false}
           alt="Numbers"
-          className="relative bottom-110 right-180 z-50 w-30 h-30 object-contain"
+          className="relative bottom-100 right-180 z-50 w-30 h-30 object-contain "
         />
       ) : (
         <img
           src={StarP}
           draggable={false}
           alt="Numbers"
-          className=" relative bottom-110 right-180 z-50 w-30 h-30 object-contain"
+          className=" relative bottom-100 right-180 z-50 w-30 h-30 object-contain"
         />
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-50">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-30">
         {/* Botón Sumar */}
         <button
-          onClick={() => handleActivity("Sumas")}
-          className={` group relative rounded-3xl p-10 bottom-80 w-150 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
+          onClick={() => handleActivity("Facil")}
+          className={` group relative rounded-3xl  bottom-70 w-100 h-60 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
             ${
               genero === "mujer"
                 ? "bg-ground-custom2girl bg-custom-gradient-girl2"
@@ -440,71 +417,32 @@ export default function Home() {
             }`}
         >
           {/* Contenedor flex para alinear imagen y texto */}
-          <div className="flex items-center gap-15">
-            {/* Imagen del lado izquierdo */}
-            <div className="w-35 h-35  rounded-full flex-shrink-0 group-hover:rotate-12 transition-transform ">
-              {genero === "mujer" ? (
-                <img
-                  src={Plusgirl}
-                  draggable={false}
-                  alt="Background"
-                  className="w-35 h-35 object-contain"
-                />
-              ) : (
-                <img
-                  src={plusboy}
-                  draggable={false}
-                  alt="plusboy"
-                  className="w-35 h-35  object-contain"
-                />
-              )}
-            </div>
-
+          <div className="flex justify-center ">
             {/* Texto del lado derecho */}
             {genero === "mujer" ? (
-              <div className="text-left">
+              <div className="flex justify-center">
                 <span
-                  className="text-3xl md:text-4xl font-bold block"
+                  className="text-3xl md:text-7xl  block"
                   style={{
                     fontFamily: "Kavoon, cursive",
                     color: "#FFFFFF",
-                    textShadow: "-7px 0px #852526",
+                    textShadow: "-5px 0px #852526",
                   }}
                 >
-                  Hoy vamos a
-                </span>
-                <span
-                  className="text-4xl md:text-5xl font-bold block"
-                  style={{
-                    fontFamily: "Kavoon, cursive",
-                    color: "#FFFFFF",
-                    textShadow: "-7px 0px #852526",
-                  }}
-                >
-                  Sumar
+                  Facil
                 </span>
               </div>
             ) : (
-              <div className="text-left">
+              <div className="flex justify-center">
                 <span
-                  className="text-3xl md:text-4xl font-bold block"
+                  className="text-3xl md:text-7xl  block"
                   style={{
                     fontFamily: "Kavoon, cursive",
                     color: "#FFB212",
-                    textShadow: "-7px 0px #262A51",
+                    textShadow: "-8px 0px #262A51",
                   }}
                 >
-                  Hoy vamos a
-                </span>
-                <span
-                  className="text-4xl md:text-5xl font-bold block"
-                  style={{
-                    fontFamily: "Kavoon, cursive",
-                    color: "#FFB212",
-                    textShadow: "-7px 0px #262A51",
-                  }}
-                >
-                  Sumar
+                  Facil
                 </span>
               </div>
             )}
@@ -512,8 +450,8 @@ export default function Home() {
         </button>
 
         <button
-          onClick={() => handleActivity("Restas")}
-          className={`group relative rounded-3xl p-10 bottom-80 w-150 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
+          onClick={() => handleActivity("Medio")}
+          className={`group relative rounded-3xl p-10 bottom-50 w-110 h-60 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
             ${
               genero === "mujer"
                 ? "bg-ground-custom2girl bg-custom-gradient-girl2"
@@ -523,78 +461,82 @@ export default function Home() {
             }`}
         >
           {/* Contenedor flex para alinear imagen y texto */}
-          <div className="flex items-center gap-15">
-            {/* Imagen del lado izquierdo */}
-            <div className="w-35 h-35 rounded-full flex-shrink-0 group-hover:-rotate-12 transition-transform">
-              {genero === "mujer" ? (
-                <img
-                  src={resgirl}
-                  draggable={false}
-                  alt="resgirl"
-                  className="w-35 h-35 object-contain"
-                />
-              ) : (
-                <img
-                  src={restboy}
-                  draggable={false}
-                  alt="restboy"
-                  className="w-35 h-35 object-contain"
-                />
-              )}
-            </div>
-
+          <div className="flex justify-center ">
             {/* Texto del lado derecho */}
             {genero === "mujer" ? (
-              <div className="text-left">
+              <div className="flex justify-center">
                 <span
-                  className="text-3xl md:text-4xl font-bold block"
+                  className="text-3xl md:text-7xl  block"
                   style={{
                     fontFamily: "Kavoon, cursive",
                     color: "#FFFFFF",
-                    textShadow: "-7px 0px #852526",
+                    textShadow: "-5px 0px #852526",
                   }}
                 >
-                  Hoy vamos a
-                </span>
-                <span
-                  className="text-4xl md:text-5xl font-bold block"
-                  style={{
-                    fontFamily: "Kavoon, cursive",
-                    color: "#FFFFFF",
-                    textShadow: "-7px 0px #852526",
-                  }}
-                >
-                  Restar
+                  Medio
                 </span>
               </div>
             ) : (
-              <div className="text-left">
+              <div className="flex justify-center">
                 <span
-                  className="text-3xl md:text-4xl font-bold block"
+                  className="text-3xl md:text-7xl  block"
                   style={{
                     fontFamily: "Kavoon, cursive",
                     color: "#FFB212",
-                    textShadow: "-7px 0px #262A51",
+                    textShadow: "-8px 0px #262A51",
                   }}
                 >
-                  Hoy vamos a
+                  Medio
                 </span>
+              </div>
+            )}
+          </div>
+        </button>
+        <button
+          onClick={() => handleActivity("Dificil")} 
+          className={` group relative rounded-3xl p-10 bottom-70 w-100 h-60 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
+            ${
+              genero === "mujer"
+                ? "bg-ground-custom2girl bg-custom-gradient-girl2"
+                : genero === "hombre"
+                ? "bg-ground-custom2 bg-custom-gradient"
+                : "bg-gray-400"
+            }`}
+        >
+          {/* Contenedor flex para alinear imagen y texto */}
+          <div className="flex justify-center ">
+            {/* Texto del lado derecho */}
+            {genero === "mujer" ? (
+              <div className="flex justify-center">
                 <span
-                  className="text-4xl md:text-5xl font-bold block"
+                  className="text-3xl md:text-7xl  block"
+                  style={{
+                    fontFamily: "Kavoon, cursive",
+                    color: "#FFFFFF",
+                    textShadow: "-5px 0px #852526",
+                  }}
+                >
+                  Dificil
+                </span>
+              </div>
+            ) : (
+              <div className="flex justify-center">
+                <span
+                  className="text-3xl md:text-7xl  block"
                   style={{
                     fontFamily: "Kavoon, cursive",
                     color: "#FFB212",
-                    textShadow: "-7px 0px #262A51",
+                    textShadow: "-8px 0px #262A51",
                   }}
                 >
-                  Restar
+                  Dificil
                 </span>
               </div>
             )}
           </div>
         </button>
       </div>
-      <div className=" absolute  bottom-10 left-10 ">
+      <div className=" absolute bottom-10 left-10 ">
         {/* Botón Cerrar sesión */}
         {genero === "mujer" ? (
           <button
@@ -627,6 +569,44 @@ export default function Home() {
             <LogOut className="w-20 h-20 " strokeWidth={3} />
           </button>
         )}
+      </div>
+
+      <div className=" absolute  bottom-10 right-10 ">
+        {/* Botón regresar */}
+        {genero === "mujer" ? (
+          <button
+            onClick={() => {
+             navigate ("/Home");
+            }}
+            className=" text-6xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
+            style={{
+              fontFamily: "Kavoon, cursive",
+              color: "#5F005C",
+              filter: "url(#inner-shadow)",
+            }}
+          >
+            <Undo className="w-20 h-20 " strokeWidth={3} />
+           Regresar
+           
+          </button>
+        ) : (
+          <button
+           onClick={() => {
+             navigate ("/Home");
+            }}
+            className=" text-6xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
+            style={{
+              fontFamily: "Kavoon, cursive",
+              color: "#262A51",
+              filter: "url(#inner-shadow)",
+            }}
+          > 
+          <Undo className="w-20 h-20 " strokeWidth={3} />
+            Regresar
+           
+          </button>
+        )}
+        
       </div>
     </div>
   );

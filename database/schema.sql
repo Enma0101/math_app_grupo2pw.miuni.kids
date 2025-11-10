@@ -13,15 +13,16 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     age INT NOT NULL,
+    geneder ENUM('mujer', 'hombre') NOT NULL,
+    date_birthday DATE NOT NULL,
     date_registered DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 🏆 LEVELS CONFIGURATION
 CREATE TABLE levels_config (
     id_level INT AUTO_INCREMENT PRIMARY KEY,
-    level_name VARCHAR(50) NOT NULL,
-    required_stars INT NOT NULL,
-    color_theme VARCHAR(20) NOT NULL
+    level_name ENUM('facil', 'medio', 'dificil') NOT NULL,
+    Stars_for_exercises INT NOT NULL,
 );
 
 -- 📊 USER PROGRESS
@@ -31,7 +32,6 @@ CREATE TABLE user_progress (
     level INT DEFAULT 1 NOT NULL,
     total_stars INT DEFAULT 0 NOT NULL,
     current_streak INT DEFAULT 0 NOT NULL,
-    best_streak INT DEFAULT 0 NOT NULL,
     last_update DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id_user)
         ON DELETE CASCADE
@@ -43,7 +43,7 @@ CREATE TABLE user_exercises (
     id_exercise INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     level_id INT NOT NULL,
-    operation_type ENUM('sum', 'subtract') NOT NULL,
+    operation_type ENUM('Sumas', 'Restas') NOT NULL,
     number1 INT NOT NULL CHECK (number1 BETWEEN 1000 AND 9999),
     number2 INT NOT NULL CHECK (number2 BETWEEN 1000 AND 9999),
     correct_result INT NOT NULL,
@@ -62,8 +62,8 @@ CREATE TABLE user_exercises (
 -- =============================================
 -- 🎮 Insert default levels for gamification
 -- =============================================
-INSERT INTO levels_config (level_name, required_stars, color_theme)
+INSERT INTO levels_config (level_name, Stars_for_exercises)
 VALUES
-('Beginner', 10, '#6EC1E4'),
-('Intermediate', 25, '#FFD166'),
-('Advanced', 50, '#EF476F');
+('facil', 1 ),
+('medio', 2 ),
+('dificil', 3);
