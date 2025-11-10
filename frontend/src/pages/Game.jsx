@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
-import { LogOut, Undo } from "lucide-react";
+import { LogOut, Undo, RotateCcw } from "lucide-react";
+import Swal from "sweetalert2";
 
 // Importa tus imágenes
 import Background from "../assets/BackgroundLogin.svg";
@@ -12,41 +13,157 @@ import Number8 from "../assets/Number8.png";
 import Number4 from "../assets/Number4.png";
 import fondo1 from "../assets/fondo.svg";
 import Check from "../assets/check.png";
+import {
+  generateUniqueExercises,
+  getExercisesFromStorage,
+  saveExercisesToStorage,
+  clearExercisesByLevel,
+  generateCompletelyNewExercises,
+} from "../utils/exerciseGenerator";
 
 export default function Game() {
-  // Estado para almacenar el género seleccionado
-
-  const [TotalStar, setTotalStar] = useState(100);
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { kindOperation, genero } = state || {};
+  const { kindOperation, genero, nivel } = state || {};
   const resultado = kindOperation === "Sumas" ? "+" : "-";
-  const [validationResult, setValidationResult] = useState(null);
-  const [current_streak, setcurrent_streak] = useState(5);
-  const [num1] = useState("4598");
-  const [num2] = useState("8956");
 
+  const [current_streak, setcurrent_streak] = useState(24);
+
+  const [exercises, setExercises] = useState([]);
+
+  const [Bloked, setBloked] = useState({
+    0: true,
+    1: false,
+    2: false,
+    3: false,
+    4: false,
+    5: false,
+    6: false,
+    7: false,
+  });
+
+  useEffect(() => {
+    if (kindOperation && nivel) {
+      // Intentar cargar ejercicios existentes
+      const storedExercises = getExercisesFromStorage(
+        kindOperation,
+        nivel,
+        genero
+      );
+
+      if (storedExercises) {
+        // Si existen, cargarlos
+        setExercises(storedExercises);
+
+        // Actualizar estado de bloqueados
+        const newBloked = {};
+        storedExercises.forEach((exercise, index) => {
+          newBloked[index] = exercise.is_correct;
+        });
+        setBloked(newBloked);
+      } else {
+        // Si no existen, generar nuevos
+        const newExercises = generateUniqueExercises(kindOperation, nivel);
+        setExercises(newExercises);
+        saveExercisesToStorage(kindOperation, nivel, genero, newExercises);
+      }
+    }
+  }, [kindOperation, nivel, genero]);
   const handlegoback = () => {
     navigate("/Seleccion", {
-      state: { kindOperation: kindOperation, genero: genero },
+      state: {
+        kindOperation: kindOperation,
+        genero: genero,
+        nivel: nivel,
+      },
     });
   };
 
-   const handlegoExercise = (n) => {
-    navigate("/Seleccion", {
-      state: { kindOperation: kindOperation, genero: genero },
+  const handleResetLevel = async () => {
+    const result = await Swal.fire({
+      title: `¿Reiniciar ejercicios de ${kindOperation.toUpperCase()} - Nivel ${nivel}?`,
+      text: "Se perderá todo el progreso y se generarán 8 nuevos ejercicios completamente diferentes.",
+      icon: "question",
+
+      color: "#5c5b5bff",
+      showCancelButton: true,
+      showCancelButton: true,
+      confirmButtonColor: "#4CAF50", 
+      cancelButtonColor: "#F44336", 
+
+      cancelButtonText: "Cancelar",
+      confirmButtonText: "Sí, reiniciar",
+
+      customClass: {
+        popup: " font-kavoon shadow-lg alerta-redondeada ",
+        confirmButton: "mi-boton-confirmar",
+        cancelButton: "mi-boton-cancelar",
+        title: "mi-alerta-titulo",
+        htmlContainer: "mi-alerta-texto",
+      },
     });
+
+    if (result.isConfirmed) {
+      // Guardar los ejercicios actuales para evitar generar similares
+      const currentExercises = [...exercises];
+
+      // Limpiar ejercicios del nivel y tipo de operación actual
+      clearExercisesByLevel(nivel, kindOperation);
+
+      // Generar nuevos ejercicios que NO se parezcan a los anteriores
+      const newExercises = generateCompletelyNewExercises(
+        kindOperation,
+        nivel,
+        currentExercises
+      );
+
+      setExercises(newExercises);
+      saveExercisesToStorage(kindOperation, nivel, genero, newExercises);
+
+      // Resetear todos los bloqueados
+      setBloked({
+        0: false,
+        1: false,
+        2: false,
+        3: false,
+        4: false,
+        5: false,
+        6: false,
+        7: false,
+      });
+
+      // Mostrar confirmación
+      Swal.fire({
+        title: "¡Reiniciado!",
+        text: "Los ejercicios han sido regenerados.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+        customClass: {
+          popup: "font-kavoon shadow-lg alerta-redondeada ",
+          confirmButton: "mi-boton-confirmar",
+          cancelButton: "mi-boton-cancelar",
+          title: "mi-alerta-titulo",
+          htmlContainer: "mi-alerta-texto",
+        },
+      });
+    }
   };
-  const [Bloked, setBloked] = useState({
-    0: false, // operación 1
-    1: false, // operación 2
-    2: false, // operación 3
-    3: false, // operación 4
-    4: false, // operación 5
-    5: false, // operación 6
-    6: false, // operación 7
-    7: false, // operación 8
-  });
+
+  const handlegoExercise = (index) => {
+    if (!Bloked[index] && exercises[index]) {
+      navigate("/Exercise", {
+        state: {
+          exercise: exercises[index],
+          exerciseIndex: index,
+          kindOperation: kindOperation,
+          genero: genero,
+          nivel: nivel,
+          allExercises: exercises,
+        },
+      });
+    }
+  };
 
   {
     /* const { kindOperation, genero } = state || {};*/
@@ -189,10 +306,11 @@ export default function Game() {
                       style={{
                         display: "block",
                         marginTop: "25px",
+                        marginLeft: "50px",
                         color: "#ffff",
                       }}
                     >
-                      ¡Vamos a Sumar!
+                      Nivel: {nivel}
                     </span>
                   </h1>
                 ) : (
@@ -208,10 +326,11 @@ export default function Game() {
                       style={{
                         display: "block",
                         marginTop: "25px",
+                        marginLeft: "50px",
                         color: "#ffff",
                       }}
                     >
-                      ¡Vamos a Restar!
+                      Nivel: {nivel}
                     </span>
                   </h1>
                 )
@@ -228,10 +347,11 @@ export default function Game() {
                     style={{
                       display: "block",
                       marginTop: "25px",
+                      marginLeft: "50px",
                       color: "#262A51",
                     }}
                   >
-                    ¡Vamos a Sumar!
+                    Nivel: {nivel}
                   </span>
                 </h1>
               ) : (
@@ -247,10 +367,11 @@ export default function Game() {
                     style={{
                       display: "block",
                       marginTop: "25px",
+                      marginLeft: "50px",
                       color: "#262A51",
                     }}
                   >
-                    ¡Vamos a Restar!
+                    Nivel: {nivel}
                   </span>
                 </h1>
               )}
@@ -285,7 +406,7 @@ export default function Game() {
         </nav>
       </div>
 
-      <div className="absolute top-50 right-0 w-45 h-50 z-50">
+      <div className="absolute top-50 right-0 w-30 h-50 z-50">
         <img
           src={Number8}
           alt="number8"
@@ -314,7 +435,7 @@ export default function Game() {
         <div className="absolute z-50 w-full h-full p-10 flex items-center justify-center">
           <div className="absolute grid grid-cols-4 grid-rows-2 gap-x-10  -translate-y-10">
             {Bloked[0] ? (
-              <div className=" absolute w-20 h-20 top-50  left-70 z-100">
+              <div className=" absolute w-20 h-20 top-50  left-72 z-120">
                 <img
                   src={Check}
                   draggable={false}
@@ -324,7 +445,7 @@ export default function Game() {
               </div>
             ) : null}
             {Bloked[1] ? (
-              <div className=" absolute w-20 h-20 top-50  left-172 z-100">
+              <div className=" absolute w-20 h-20 top-50  left-180 z-100">
                 <img
                   src={Check}
                   draggable={false}
@@ -334,7 +455,7 @@ export default function Game() {
               </div>
             ) : null}
             {Bloked[2] ? (
-              <div className=" absolute w-20 h-20 top-50  left-270 z-100">
+              <div className=" absolute w-20 h-20 top-50  left-285 z-100">
                 <img
                   src={Check}
                   draggable={false}
@@ -344,7 +465,7 @@ export default function Game() {
               </div>
             ) : null}
             {Bloked[3] ? (
-              <div className=" absolute w-20 h-20 top-50  left-368 z-100">
+              <div className=" absolute w-20 h-20 top-50  left-388 z-100">
                 <img
                   src={Check}
                   draggable={false}
@@ -353,8 +474,8 @@ export default function Game() {
                 />
               </div>
             ) : null}
-             {Bloked[4] ? (
-              <div className=" absolute w-20 h-20 top-130  left-70 z-100">
+            {Bloked[4] ? (
+              <div className=" absolute w-20 h-20 top-130  left-72 z-100">
                 <img
                   src={Check}
                   draggable={false}
@@ -364,7 +485,7 @@ export default function Game() {
               </div>
             ) : null}
             {Bloked[5] ? (
-              <div className=" absolute w-20 h-20 top-130  left-172 z-100">
+              <div className=" absolute w-20 h-20 top-130  left-180 z-100">
                 <img
                   src={Check}
                   draggable={false}
@@ -374,7 +495,7 @@ export default function Game() {
               </div>
             ) : null}
             {Bloked[6] ? (
-              <div className=" absolute w-20 h-20 top-130  left-270 z-100">
+              <div className=" absolute w-20 h-20 top-130  left-285 z-100">
                 <img
                   src={Check}
                   draggable={false}
@@ -384,7 +505,7 @@ export default function Game() {
               </div>
             ) : null}
             {Bloked[7] ? (
-              <div className=" absolute w-20 h-20 top-130  left-368 z-100">
+              <div className=" absolute w-20 h-20 top-130  left-388 z-100">
                 <img
                   src={Check}
                   draggable={false}
@@ -394,223 +515,108 @@ export default function Game() {
               </div>
             ) : null}
 
-            {/* Contenedor 1 */}
-            <button
-              className={`relative backdrop-blur-sm rounded-4xl w-80 h-75 flex flex-col border-3 border-black/20 px-7 shadow-inner transition-transform mt-3 sm:mt-5 ml-4 ${
-                !Bloked[0] ? "transition-all duration-300 hover:scale-110" : ""
-              }`}
-              style={{
-                fontFamily: "Sansation, cursive",
-                color: "#FFFFFF",
-                filter: Bloked[0] ? "grayscale(20%) brightness(0.70)" : "none",
-              }}
-              disabled={Bloked[0]}
-            >
-              <div className="relative z-10">
-                <p className="text-white text-6xl font-bold leading-tight text-right">
-                  {num1} <span className="text-8xl">{resultado}</span>
-                </p>
-                <p className="text-white text-6xl font-bold leading-tight text-right mr-13">
-                  8956
-                </p>
-                <div className="w-full h-2 bg-white mt-2 opacity-80"></div>
-                <p className="text-white text-6xl font-bold leading-tight opacity-90 text-right mr-13">
-                  19998
-                </p>
-              </div>
-            </button>
+            {/* REEMPLAZAR TUS 8 BOTONES POR ESTO: */}
+            {exercises.map((exercise, index) => {
+              const marginClass = index % 4 === 0 ? "ml-4" : "ml-8";
 
-            {/* Contenedor 2 */}
-            <button
-              className={`relative backdrop-blur-sm rounded-4xl w-80 h-75 flex flex-col border-3 border-black/20 px-6 shadow-inner transition-transform mt-3 sm:mt-5 ml-8 ${
-                !Bloked[1] ? "transition-all duration-300 hover:scale-110" : ""
-              }`}
-              style={{
-                fontFamily: "Sansation, cursive",
-                color: "#FFFFFF",
-                filter: Bloked[1] ? "grayscale(20%) brightness(0.70)" : "none",
-              }}
-              disabled={Bloked[1]}
-            >
-              <div className="relative z-10">
-                <p className="text-white text-6xl font-bold leading-tight text-right">
-                  4598 <span className="text-8xl">{resultado}</span>
-                </p>
-                <p className="text-white text-6xl font-bold leading-tight text-right mr-13">
-                  8956
-                </p>
-                <div className="w-full h-2 bg-white mt-2 opacity-80"></div>
-                <p className="text-white text-6xl font-bold leading-tight opacity-90 text-right mr-13">
-                  19998
-                </p>
-              </div>
-            </button>
+              // Separar dígitos individuales para alineación perfecta
+              const num1Digits = exercise.number1
+                .toString()
+                .padStart(4, " ")
+                .split("");
+              const num2Digits = exercise.number2
+                .toString()
+                .padStart(4, " ")
+                .split("");
+              const resultDigits = exercise.is_correct
+                ? exercise.correct_result.toString().padStart(5, " ").split("")
+                : ["", "", "", "", ""];
 
-            {/* Contenedor 3 */}
-            <button
-              className={`relative backdrop-blur-sm rounded-4xl w-80 h-75 flex flex-col border-3 border-black/20 px-6 shadow-inner transition-transform mt-3 sm:mt-5 ml-8 ${
-                !Bloked[2] ? "transition-all duration-300 hover:scale-110" : ""
-              }`}
-              style={{
-                fontFamily: "Sansation, cursive",
-                color: "#FFFFFF",
-                filter: Bloked[2] ? "grayscale(20%) brightness(0.70)" : "none",
-              }}
-              disabled={Bloked[2]}
-            >
-              <div className="relative z-10">
-                <p className="text-white text-6xl font-bold leading-tight text-right">
-                  4598 <span className="text-8xl">{resultado}</span>
-                </p>
-                <p className="text-white text-6xl font-bold leading-tight text-right mr-13">
-                  8956
-                </p>
-                <div className="w-full h-2 bg-white mt-2 opacity-80"></div>
-                <p className="text-white text-6xl font-bold leading-tight opacity-90 text-right mr-13">
-                  9998
-                </p>
-              </div>
-            </button>
+              return (
+                <button
+                  key={`exercise-${index}`}
+                  onClick={() => handlegoExercise(index)}
+                  className={`relative backdrop-blur-sm rounded-4xl w-87 h-75 flex flex-col border-4 border-black/20 px-7 shadow-inner transition-transform mt-3 sm:mt-5 ${marginClass} ${
+                    !Bloked[index]
+                      ? "transition-all duration-300 hover:scale-110"
+                      : ""
+                  }`}
+                  style={{
+                    fontFamily: "Sansation, cursive",
+                    color: "#FFFFFF",
+                    filter: Bloked[index]
+                      ? "grayscale(20%) brightness(0.70)"
+                      : "none",
+                  }}
+                  disabled={Bloked[index]}
+                >
+                  <div className="relative z-10 flex flex-col items-end pl-4">
+                    {/* Primera línea: operador + número1 */}
+                    <div className="flex items-center gap-1">
+                      {num1Digits.map((digit, i) => (
+                        <span
+                          key={`num1-${i}`}
+                          className="text-6xl font-bold text-white w-10 text-center"
+                          style={{ fontFamily: "Sansation" }}
+                        >
+                          {digit}
+                        </span>
+                      ))}
+                      <span className="text-9xl font-bold text-white w-10 text-center ml-3 mr-4">
+                        {resultado}
+                      </span>
+                    </div>
 
-            {/* Contenedor 4 */}
-            <button
-              className={`relative backdrop-blur-sm rounded-4xl w-80 h-75 flex flex-col border-3 border-black/20 px-6 shadow-inner transition-transform mt-3 sm:mt-5 ml-8 ${
-                !Bloked[3] ? "transition-all duration-300 hover:scale-110" : ""
-              }`}
-              style={{
-                fontFamily: "Sansation, cursive",
-                color: "#FFFFFF",
-                filter: Bloked[3] ? "grayscale(20%) brightness(0.70)" : "none",
-              }}
-              disabled={Bloked[3]}
-            >
-              <div className="relative z-10">
-                <p className="text-white text-6xl font-bold leading-tight text-right">
-                  4598 <span className="text-8xl">{resultado}</span>
-                </p>
-                <p className="text-white text-6xl font-bold leading-tight text-right mr-13">
-                  8956
-                </p>
-                <div className="w-full h-2 bg-white mt-2 opacity-80"></div>
-                <p className="text-white text-6xl font-bold leading-tight opacity-90 text-right mr-13">
-                  9998
-                </p>
-              </div>
-            </button>
+                    {/* Segunda línea: número2 */}
+                    <div className="flex items-center gap-1">
+                      {/* Espacio para alinear con el operador de arriba */}
 
-            {/* Contenedor 5 */}
-            <button
-              className={`relative backdrop-blur-sm rounded-4xl w-80 h-75 flex flex-col border-3 border-black/20 px-6 shadow-inner transition-transform mt-3 sm:mt-5 ml-4 ${
-                !Bloked[4] ? "transition-all duration-300 hover:scale-110" : ""
-              }`}
-              style={{
-                fontFamily: "Sansation, cursive",
-                color: "#FFFFFF",
-                filter: Bloked[4] ? "grayscale(20%) brightness(0.70)" : "none",
-              }}
-              disabled={Bloked[4]}
-            >
-              <div className="relative z-10">
-                <p className="text-white text-6xl font-bold leading-tight text-right">
-                  4598 <span className="text-8xl">{resultado}</span>
-                </p>
-                <p className="text-white text-6xl font-bold leading-tight text-right mr-13">
-                  8956
-                </p>
-                <div className="w-full h-2 bg-white mt-2 opacity-80"></div>
-                <p className="text-white text-6xl font-bold leading-tight opacity-90 text-right mr-13">
-                  9998
-                </p>
-              </div>
-            </button>
+                      {num2Digits.map((digit, i) => (
+                        <span
+                          key={`num2-${i}`}
+                          className="text-6xl font-bold text-white w-10 text-center"
+                          style={{ fontFamily: "Sansation" }}
+                        >
+                          {digit}
+                        </span>
+                      ))}
+                      <span className="w-10 ml-8"></span>
+                    </div>
 
-            {/* Contenedor 6 */}
-            <button
-              className={`relative backdrop-blur-sm rounded-4xl w-80 h-75 flex flex-col border-3 border-black/20 px-6 shadow-inner transition-transform mt-3 sm:mt-5 ml-8 ${
-                !Bloked[5] ? "transition-all duration-300 hover:scale-110" : ""
-              }`}
-              style={{
-                fontFamily: "Sansation, cursive",
-                color: "#FFFFFF",
-                filter: Bloked[5] ? "grayscale(20%) brightness(0.70)" : "none",
-              }}
-              disabled={Bloked[5]}
-            >
-              <div className="relative z-10">
-                <p className="text-white text-6xl font-bold leading-tight text-right">
-                  4598 <span className="text-8xl">{resultado}</span>
-                </p>
-                <p className="text-white text-6xl font-bold leading-tight text-right mr-13">
-                  8956
-                </p>
-                <div className="w-full h-2 bg-white mt-2 opacity-80"></div>
-                <p className="text-white text-6xl font-bold leading-tight opacity-90 text-right mr-13">
-                  9998
-                </p>
-              </div>
-            </button>
+                    {/* Línea divisoria */}
+                    <div className="w-full h-2 bg-white mt-2 mb-2 opacity-80"></div>
 
-            {/* Contenedor 7 */}
-            <button
-              className={`relative backdrop-blur-sm rounded-4xl w-80 h-75 flex flex-col border-3 border-black/20 px-6 shadow-inner transition-transform mt-3 sm:mt-5 ml-8 ${
-                !Bloked[6] ? "transition-all duration-300 hover:scale-110" : ""
-              }`}
-              style={{
-                fontFamily: "Sansation, cursive",
-                color: "#FFFFFF",
-                filter: Bloked[6] ? "grayscale(20%) brightness(0.70)" : "none",
-              }}
-              disabled={Bloked[6]}
-            >
-              <div className="relative z-10">
-                <p className="text-white text-6xl font-bold leading-tight text-right">
-                  4598 <span className="text-8xl">{resultado}</span>
-                </p>
-                <p className="text-white text-6xl font-bold leading-tight text-right mr-13">
-                  8956
-                </p>
-                <div className="w-full h-2 bg-white mt-2 opacity-80"></div>
-                <p className="text-white text-6xl font-bold leading-tight opacity-90 text-right mr-13">
-                  9998
-                </p>
-              </div>
-            </button>
+                    {/* Resultado con espacio extra para 5to dígito */}
+                    <div className="flex items-center gap-1">
+                      {/* Espacio para alinear con el operador */}
 
-            {/* Contenedor 8 */}
-            <button
-              className={`relative backdrop-blur-sm rounded-4xl w-80 h-75 flex flex-col border-3 border-black/20 px-6 shadow-inner transition-transform mt-10 sm:mt-5 ml-8 ${
-                !Bloked[7] ? "transition-all duration-300 hover:scale-110" : ""
-              }`}
-              style={{
-                fontFamily: "Sansation, cursive",
-                color: "#FFFFFF",
-                filter: Bloked[7] ? "grayscale(20%) brightness(0.70)" : "none",
-              }}
-              disabled={Bloked[7]}
-            >
-              <div className="relative z-10">
-                <p className="text-white text-6xl font-bold leading-tight text-right">
-                  4598 <span className="text-8xl">{resultado}</span>
-                </p>
-                <p className="text-white text-6xl font-bold leading-tight text-right mr-13">
-                  8956
-                </p>
-                <div className="w-full h-2 bg-white mt-2 opacity-80"></div>
-                <p className="text-white text-6xl font-bold leading-tight opacity-90 text-right mr-13">
-                  9998
-                </p>
-              </div>
-            </button>
+                      {resultDigits.map((digit, i) => (
+                        <span
+                          key={`result-${i}`}
+                          className="text-6xl font-bold text-white opacity-90 w-10 text-center "
+                          style={{ fontFamily: "Sansation" }}
+                        >
+                          {digit}
+                        </span>
+                      ))}
+                      <span className="w-10 ml-8"></span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <div className=" absolute  bottom-10 right-20 z-30 ">
+      <div className=" absolute flex items-center  bottom-10 right-20 z-30 ">
+        
+
         {/* Botón regresar */}
         {genero === "mujer" ? (
           <button
             onClick={handlegoback}
-            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
+            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
             style={{
               fontFamily: "Kavoon, cursive",
               color: "#ffffff",
@@ -621,7 +627,7 @@ export default function Game() {
         ) : (
           <button
             onClick={handlegoback}
-            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
+            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
             style={{
               fontFamily: "Kavoon, cursive",
               color: "#FFB212",
@@ -631,6 +637,32 @@ export default function Game() {
           </button>
         )}
       </div>
+      <div className=" absolute flex items-center  bottom-10 left-50 z-30 ">
+      {/* Botón regresar */}
+        {genero === "mujer" ? (
+          <button
+            onClick={handleResetLevel}
+            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
+            style={{
+              fontFamily: "Kavoon, cursive",
+              color: "#ffffff",
+            }}
+          >
+            Reiniciar <RotateCcw className="w-10 h-10 " strokeWidth={3} />
+          </button>
+        ) : (
+          <button
+            onClick={handleResetLevel}
+            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
+            style={{
+              fontFamily: "Kavoon, cursive",
+              color: "#FFB212",
+            }}
+          >
+            Reiniciar <RotateCcw className="w-10 h-10 " strokeWidth={3} />
+          </button>
+        )}
+        </div>
     </div>
   );
 }

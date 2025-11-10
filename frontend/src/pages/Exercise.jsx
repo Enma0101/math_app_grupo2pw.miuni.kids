@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation, Navigate } from "react-router-dom";
-import { ChevronRight, RotateCcw  } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ChevronRight, RotateCcw } from "lucide-react";
+import Swal from "sweetalert2";
 
 // Importa tus imágenes
 import Background from "../assets/BackgroundLogin.svg";
@@ -15,51 +16,57 @@ import Check from "../assets/check.png";
 import Cross from "../assets/Cross Mark.png";
 import StarR from "../assets/starR.png";
 import Cat from "../assets/catawesome.gif";
+import Catsad from "../assets/catsad.gif";
+import { updateExerciseInStorage } from "../utils/exerciseGenerator";
 
 export default function Exercise() {
-  // Estado para almacenar el género seleccionado
-  const [userName, setUserName] = useState("Enmanuel");
-  const [TotalStar, setTotalStar] = useState(100);
   const { state } = useLocation();
   const navigate = useNavigate();
-  const [genero, setGenero] = useState("mujer");
-  const [kindOperation, setkindOperation] = useState("Sumas");
+
+  // ✅ RECIBIR DATOS DESDE GAME
+  const {
+    exercise,
+    exerciseIndex,
+    kindOperation,
+    genero,
+    nivel,
+    allExercises,
+  } = state || {};
+
+  // Estados básicos
+  const [userName, setUserName] = useState("Enmanuel");
+  const [TotalStar, setTotalStar] = useState(100);
   const [current_streak, setcurrent_streak] = useState(5);
-  const [operation, setOperation] = useState("-");
-  const [num1] = useState("4598");
-  const [num2] = useState("8956");
   const [Star_for_level] = useState(3);
 
-  const [Bloked, setBloked] = useState({
-    0: false, // operación 1
-    1: false, // operación 2
-    2: false, // operación 3
-    3: false, // operación 4
-    4: false, // operación 5
-    5: false, // operación 6
-    6: false, // operación 7
-    7: false, // operación 8
-  });
+  // ✅ USAR LOS DATOS DEL EJERCICIO RECIBIDO
+  const [operation, setOperation] = useState("+");
+  const [num1, setNum1] = useState("0000");
+  const [num2, setNum2] = useState("0000");
+  const [correctAnswer, setCorrectAnswer] = useState("");
 
-  {
-    /* const { kindOperation, genero } = state || {};*/
-  }
+  // Acumuladores de "llevo" para cada posición
+  const [carries, setCarries] = useState([0, 0, 0, 0]);
 
-  // Acumuladores de "llevo" para cada posición (derecha a izquierda: índice 3, 2, 1, 0)
-  const [carries, setCarries] = useState([0, 0, 0, 0]); // 4 posiciones
+  // Respuesta del usuario (5 dígitos)
+  const [answer, setAnswer] = useState(["", "", "", "", ""]);
 
-  // Respuesta del usuario (5 dígitos, derecha a izquierda: índice 4, 3, 2, 1, 0)
-  const [answer, setAnswer] = useState(["", "", "", "", ""]); // 5 posiciones
+  const [validationResult, setValidationResult] = useState(null);
 
-  const [validationResult, setValidationResult] = useState(null); // 'correct', 'incorrect', o null
+  // ✅ CARGAR EL EJERCICIO AL MONTAR EL COMPONENTE
+  useEffect(() => {
+    if (exercise) {
+      // Configurar operación
+      setOperation(exercise.operation_type === "Sumas" ? "+" : "-");
 
-  // Calcular resultado correcto
-  const correctAnswer =
-    operation === "+"
-      ? (parseInt(num1) + parseInt(num2)).toString()
-      : Math.abs(parseInt(num1) - parseInt(num2)).toString();
+      // Configurar números (asegurar 4 dígitos)
+      setNum1(exercise.number1.toString().padStart(4, "0"));
+      setNum2(exercise.number2.toString().padStart(4, "0"));
 
-  const expectedLength = correctAnswer.length;
+      // Configurar respuesta correcta
+      setCorrectAnswer(exercise.correct_result.toString());
+    }
+  }, [exercise]);
 
   const isCarryEnabled = (index) => {
     return true;
@@ -67,10 +74,7 @@ export default function Exercise() {
 
   // Verificar si un cuadro de respuesta está habilitado
   const isAnswerEnabled = (index) => {
-    // Los índices van de 0 (izquierda) a 4 (derecha)
-    // El de más a la derecha (índice 4) siempre está habilitado
     if (index === 4) return true;
-    // Los demás solo si el de la derecha ya tiene un valor
     return answer[index + 1] !== "";
   };
 
@@ -93,11 +97,10 @@ export default function Exercise() {
         ? "0"
         : String((parseInt(newAnswer[index]) + 1) % 10);
     setAnswer(newAnswer);
-    // Limpiar validación anterior al cambiar respuesta
     setValidationResult(null);
   };
 
-  // Función para verificar la respuesta manualmente
+  // ✅ FUNCIÓN PARA VERIFICAR LA RESPUESTA
   const handleVerify = () => {
     // Contar dígitos llenados desde la derecha
     let filledCount = 0;
@@ -109,7 +112,8 @@ export default function Exercise() {
       }
     }
 
-    // Si se llenaron dígitos, obtenerlos
+    let userAnswerString = "";
+
     if (filledCount > 0) {
       const startIndex = 5 - filledCount;
       const userAnswerString = answer.slice(startIndex).join("");
@@ -117,29 +121,149 @@ export default function Exercise() {
       // Validar
       if (userAnswerString === correctAnswer) {
         setValidationResult("correct");
+
+        // ✅ ACTUALIZAR EL EJERCICIO EN STORAGE
+        const updatedExercise = {
+          ...exercise,
+          is_correct: true,
+          user_answer: parseInt(userAnswerString),
+          solved_at: new Date().toISOString(),
+        };
+
+        updateExerciseInStorage(
+          kindOperation,
+          nivel,
+          genero,
+          exerciseIndex,
+          updatedExercise
+        );
       } else {
         setValidationResult("incorrect");
       }
     } else {
-      alert("Por favor, completa la respuesta primero");
+      if (!userAnswerString) {
+        if (genero === "mujer") {
+          Swal.fire({
+            icon: "warning",
+            title: "¡Upss!",
+            text: "Debes ingresar un resultado antes de continuar ",
+            confirmButtonColor: "#2fe317ff",
+
+            customClass: {
+              popup: "rounded-xl font-kavoon shadow-lg  alerta-redondeada",
+              confirmButton: "mi-boton-confirmar",
+              cancelButton: "mi-boton-cancelar",
+
+              title: "mi-alerta-titulo",
+              htmlContainer: "mi-alerta-texto",
+            },
+          });
+        } else {
+          Swal.fire({
+            icon: "warning",
+            title: "¡Upss!",
+            text: "Debes ingresar un resultado antes de continuar 😅",
+            confirmButtonColor: "#f57c00",
+            background: "bg-ground-custom-girl",
+            color: "#5d4037",
+            customClass: {
+              popup: "rounded-xl font-kavoon shadow-lg",
+              popup: "mi-alerta-popup",
+              title: "mi-alerta-titulo",
+
+              htmlContainer: "mi-alerta-texto",
+            },
+          });
+        }
+
+        return;
+      }
     }
   };
+
   // Resetear todo
-const handleReset = () => {
-  if (validationResult === "incorrect" || validationResult === "" || validationResult === null) {
-    setCarries([0, 0, 0, 0]);
-    setAnswer(["", "", "", "", ""]);
-  }
+  const handleReset = () => {
+    if (
+      validationResult === "incorrect" ||
+      validationResult === "" ||
+      validationResult === null
+    ) {
+      setCarries([0, 0, 0, 0]);
+      setAnswer(["", "", "", "", ""]);
+      setValidationResult(null);
+    }
+  };
+
+  // ✅ FUNCIÓN PARA CONTINUAR AL SIGUIENTE EJERCICIO O REGRESAR
+  const handleContinue = () => {
+  // 🔹 Desactivar visuales antes de cambiar de pantalla
+  setValidationResult(null);
+  setCarries([0, 0, 0, 0]);
+  setAnswer(["", "", "", "", ""]);
+  
+  // 🔹 Pequeño delay para permitir limpiar la interfaz (200ms)
+  setTimeout(() => {
+    if (allExercises && exerciseIndex < allExercises.length - 1) {
+      // ✅ BUSCAR EL SIGUIENTE EJERCICIO NO COMPLETADO
+      let nextIndex = exerciseIndex + 1;
+      
+      // Buscar el siguiente ejercicio que no esté completado
+      while (nextIndex < allExercises.length) {
+        const nextExercise = allExercises[nextIndex];
+        // Si el ejercicio no está completado (is_correct no es true), lo usamos
+        if (!nextExercise.is_correct) {
+          break;
+        }
+        nextIndex++;
+      }
+      
+      // ✅ VERIFICAR SI ENCONTRAMOS UN EJERCICIO NO COMPLETADO
+      if (nextIndex < allExercises.length) {
+        navigate("/Exercise", {
+          state: {
+            exercise: allExercises[nextIndex],
+            exerciseIndex: nextIndex,
+            kindOperation,
+            genero,
+            nivel,
+            allExercises,
+          },
+        });
+      } else {
+        // ✅ SI TODOS LOS EJERCICIOS ESTÁN COMPLETADOS, IR AL JUEGO
+        navigate("/Game", {
+          state: {
+            kindOperation,
+            genero,
+            nivel,
+          },
+        });
+      }
+    } else {
+      // ✅ SI ES EL ÚLTIMO EJERCICIO, IR AL JUEGO
+      navigate("/Game", {
+        state: {
+          kindOperation,
+          genero,
+          nivel,
+        },
+      });
+    }
+  }, 200);
 };
-
-
-
-  // 'mujer' o 'hombre'
+  // ✅ FUNCIÓN PARA REGRESAR A GAME
+  const handleGoBack = () => {
+    navigate("/Game", {
+      state: {
+        kindOperation: kindOperation,
+        genero: genero,
+        nivel: nivel,
+      },
+    });
+  };
 
   return (
     <div className="h-screen bg-gradient-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Imagen de fondo */}
-
       {genero === "mujer" ? (
         <img
           src={Backgroundgirl}
@@ -166,7 +290,6 @@ const handleReset = () => {
             : "bg-gray-400"
         }`}
       >
-        {/* Navbar */}
         <nav
           className={`absolute top-0 left-0 right-0 z-30 py-4 sm:py-6 md:py-15 lg:py-20 px-4 md:px-10"
         ${
@@ -177,7 +300,6 @@ const handleReset = () => {
             : "bg-gray-400"
         }`}
         >
-          {/* Logo y Título */}
           <div className="absolute top-5 left-8 right-18 justify-between flex">
             <svg width="0" height="0">
               <filter
@@ -239,8 +361,6 @@ const handleReset = () => {
               )}
             </div>
             <div className="flex-1 flex justify-center items-center">
-              {/* Imagen numeros 2*/}
-
               {genero === "mujer" ? (
                 <img
                   src={Number1}
@@ -274,7 +394,7 @@ const handleReset = () => {
                         color: "#ffff",
                       }}
                     >
-                      ¡Vamos a Sumar!
+                      Ejercicio {exerciseIndex + 1}/8
                     </span>
                   </h1>
                 ) : (
@@ -293,7 +413,7 @@ const handleReset = () => {
                         color: "#ffff",
                       }}
                     >
-                      ¡Vamos a Restar!
+                      Ejercicio {exerciseIndex + 1}/8
                     </span>
                   </h1>
                 )
@@ -313,7 +433,7 @@ const handleReset = () => {
                       color: "#262A51",
                     }}
                   >
-                    ¡Vamos a Sumar!
+                    Ejercicio {exerciseIndex + 1}/8
                   </span>
                 </h1>
               ) : (
@@ -332,7 +452,7 @@ const handleReset = () => {
                       color: "#262A51",
                     }}
                   >
-                    ¡Vamos a Restar!
+                    Ejercicio {exerciseIndex + 1}/8
                   </span>
                 </h1>
               )}
@@ -408,15 +528,14 @@ const handleReset = () => {
             }
           >
             <div className="relative w-full h-full p-6 rounded-4xl ">
-              {/* Acumuladores de "llevo" - Solo 4, uno por cada dígito */}
+              {/* Acumuladores de "llevo" */}
               <div className="absolute top-[10%] left-[50%] -translate-x-1/2 -translate-y-1/2  gap-18 mb-4 pr-2 flex ">
-                {/* Espacio extra para el 5to dígito */}
                 {carries.map((carry, index) => (
                   <button
                     key={`carry-${index}`}
                     onClick={() => handleCarryClick(index)}
                     className="w-12 h-12  flex justify-center items-center border-1 border-black/10 rounded-2xl font-semibold text-4xl transition-all shadow-md 
-                      text-white text-center hover:scale-110 cursor-pointer  cursor-pointer"
+                      text-white text-center hover:scale-110 cursor-pointer"
                     style={{
                       background: "#21b94aff",
                       fontFamily: "Sansation, cursive",
@@ -427,7 +546,7 @@ const handleReset = () => {
                 ))}
               </div>
 
-              <div className="absolute  bottom-[50%] right-[15%]  gap-16">
+              <div className="absolute  bottom-[40%] right-[20%]  gap-10">
                 <span
                   className="text-[250px] font-bold text-white"
                   style={{ fontFamily: "Sansation, cursive" }}
@@ -438,7 +557,6 @@ const handleReset = () => {
 
               {/* Primera cifra */}
               <div className="absolute flex top-[18%] right-[35%]  gap-16 ">
-                {/* Espacio extra para el 5to dígito */}
                 {num1.split("").map((digit, index) => (
                   <div
                     key={`num1-${index}`}
@@ -457,7 +575,7 @@ const handleReset = () => {
                 ))}
               </div>
 
-              {/* Signo y segunda cifra */}
+              {/* Segunda cifra */}
               <div className="absolute flex top-[40%] right-[35%]  gap-16 ">
                 {num2.split("").map((digit, index) => (
                   <div
@@ -482,82 +600,63 @@ const handleReset = () => {
                 <div className="mx-auto w-[520px] border-t-15 border-white"></div>
               </div>
 
-              {/* Área de respuesta con selectores */}
+              {/* Área de respuesta */}
               <div className=" absolute flex top-[65%] right-[32%]  gap-3">
                 <div className="w-20"></div>
-                {answer.map((digit, index) =>
-                  validationResult === "incorrect" ? (
-                    <button
-                      key={`answer-${index}`}
-                      onClick={() => handleAnswerClick(index)}
-                      disabled={!isAnswerEnabled(index)}
-                      className={`w-30 h-35 border-1 rounded-3xl font-semibold text-9xl  transition-all shadow-lg flex items-center justify-center  ${
-                        isAnswerEnabled(index)
-                          ? " bg-ground-custom-selector  border-black/10 border-2 text-white hover:scale-105 cursor-pointer"
-                          : "bg-gray-200 border-gray-400 text-gray-400 cursor-not-allowed opacity-50"
-                      }`}
-                      style={{
-                        fontFamily: "Sansation, cursive",
-                      }}
-                    >
-                      {digit}
-                    </button>
-                  ) : validationResult === "correct" ? (
-                    <button
-                      key={`answer-${index}`}
-                      onClick={() => handleAnswerClick(index)}
-                      disabled={validationResult === "correct"}
-                      className={`w-30 h-35 border-1 rounded-3xl font-semibold text-9xl  transition-all shadow-lg flex items-center justify-center  ${
-                        isAnswerEnabled(index)
-                          ? " bg-ground-custom-selector  border-black/10 border-2 text-white hover:scale-105 cursor-pointer"
-                          : "bg-gray-200 border-gray-400 text-gray-400 cursor-not-allowed opacity-50"
-                      }`}
-                      style={{
-                        fontFamily: "Sansation, cursive",
-                      }}
-                    >
-                      {digit}
-                    </button>
-                  ) : (
-                    <button
-                      key={`answer-${index}`}
-                      onClick={() => handleAnswerClick(index)}
-                      disabled={!isAnswerEnabled(index)}
-                      className={`w-30 h-35 border-1 rounded-3xl font-semibold text-9xl  transition-all shadow-lg flex items-center justify-center  ${
-                        isAnswerEnabled(index)
-                          ? " bg-ground-custom-selector  border-black/10 border-2 text-white hover:scale-105 cursor-pointer"
-                          : "bg-gray-200 border-gray-400 text-gray-400 cursor-not-allowed opacity-50"
-                      }`}
-                      style={{
-                        fontFamily: "Sansation, cursive",
-                      }}
-                    >
-                      {digit}
-                    </button>
-                  )
-                )}
+                {answer.map((digit, index) => (
+                  <button
+                    key={`answer-${index}`}
+                    onClick={() => handleAnswerClick(index)}
+                    disabled={
+                      !isAnswerEnabled(index) || validationResult === "correct"
+                    }
+                    className={`w-30 h-35 border-1 rounded-3xl font-semibold text-9xl  transition-all shadow-lg flex items-center justify-center  ${
+                      isAnswerEnabled(index) && validationResult !== "correct"
+                        ? " bg-ground-custom-selector  border-black/10 border-2 text-white hover:scale-105 cursor-pointer"
+                        : "bg-gray-200 border-gray-400 text-gray-400 cursor-not-allowed opacity-50"
+                    }`}
+                    style={{
+                      fontFamily: "Sansation, cursive",
+                    }}
+                  >
+                    {digit}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {validationResult === "incorrect" ? (
-        <div className="absolute bottom-70 right-130 w-45 h-50 z-50">
-          <img
-            src={Cross}
-            draggable={false}
-            alt="Background"
-            className="absolute w-45 h-50 object-contain"
-          />
-        </div>
-      ) : validationResult === "correct" ? (
+      {validationResult === "incorrect" && (
+        <>
+          <div className="absolute bottom-105 right-80 w-50 h-40 z-50">
+            <img
+              src={Cross}
+              draggable={false}
+              alt="Incorrecto"
+              className="absolute w-50 h-45 object-contain"
+            />
+          </div>
+
+          <div className="absolute bottom-60 right-120 w-60 h-60 z-50">
+            <img
+              src={Catsad}
+              draggable={false}
+              alt="Correcto"
+              className="absolute w-60 h-60 object-contain"
+            />
+          </div>
+        </>
+      )}
+
+      {validationResult === "correct" && (
         <>
           <div className="absolute bottom-20 right-100 w-60 h-60 z-50">
             <img
               src={Cat}
               draggable={false}
-              alt="Background"
+              alt="Correcto"
               className="absolute w-60 h-60 object-contain"
             />
           </div>
@@ -566,7 +665,7 @@ const handleReset = () => {
             <img
               src={Check}
               draggable={false}
-              alt="Background"
+              alt="Check"
               className="absolute w-60 h-60 object-contain"
             />
 
@@ -586,7 +685,7 @@ const handleReset = () => {
                     display: "inline-block",
                   }}
                 >
-                 {Star_for_level}
+                  {Star_for_level}
                 </span>
               </h1>
 
@@ -594,72 +693,52 @@ const handleReset = () => {
                 <img
                   src={StarR}
                   draggable={false}
-                  alt="Background"
+                  alt="Star"
                   className="absolute w-50 h-50 object-contain"
                 />
               </div>
             </div>
           </div>
         </>
-      ) : null}
+      )}
 
-      {validationResult === "incorrect" ? (
-        <div className=" absolute  bottom-40 right-110 z-30 ">
-          {/* Botón regresar */}
-          {genero === "mujer" ? (
-            <button
-              onClick={handleVerify}
-              className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
-              style={{
-                fontFamily: "Kavoon, cursive",
-                color: "#ffffff",
-              }}
-            >
-              Verificar
-            </button>
-          ) : (
-            <button
-              onClick={handleVerify}
-              className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
-              style={{
-                fontFamily: "Kavoon, cursive",
-                color: "#FFB212",
-              }}
-            >
-              Verificar
-            </button>
-          )}
-        </div>
-      ) : validationResult === "correct" ? (
+      {/* Botón Verificar o Continuar */}
+      {validationResult === "correct" ? (
         <div className=" absolute  bottom-90 right-15 z-30 ">
-          {/* Botón regresar */}
           {genero === "mujer" ? (
             <button
-              onClick={""}
+              onClick={() => {
+                handleContinue();
+                handleReset();
+              }}
               className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
               style={{
                 fontFamily: "Kavoon, cursive",
                 color: "#ffffff",
               }}
             >
-              Continuar<ChevronRight className="w-15 h-20 " strokeWidth={3} />
+              Continuar
+              <ChevronRight className="w-15 h-20 " strokeWidth={3} />
             </button>
           ) : (
             <button
-              onClick={""}
+              onClick={() => {
+                handleContinue();
+                handleReset();
+              }}
               className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
               style={{
                 fontFamily: "Kavoon, cursive",
                 color: "#FFB212",
               }}
             >
-              Continuar<ChevronRight className="w-15 h-20 " strokeWidth={3} />
+              Continuar
+              <ChevronRight className="w-15 h-20 " strokeWidth={3} />
             </button>
           )}
         </div>
       ) : (
         <div className=" absolute  bottom-40 right-110 z-30 ">
-          {/* Botón regresar */}
           {genero === "mujer" ? (
             <button
               onClick={handleVerify}
@@ -686,13 +765,11 @@ const handleReset = () => {
         </div>
       )}
 
+      {/* Botón Regresar */}
       <div className=" absolute  bottom-10 right-25 z-30 ">
-        {/* Botón regresar */}
         {genero === "mujer" ? (
           <button
-            onClick={() => {
-              navigate("/Seleccion");
-            }}
+            onClick={handleGoBack}
             className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
             style={{
               fontFamily: "Kavoon, cursive",
@@ -703,9 +780,7 @@ const handleReset = () => {
           </button>
         ) : (
           <button
-            onClick={() => {
-              navigate("/Seleccion");
-            }}
+            onClick={handleGoBack}
             className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
             style={{
               fontFamily: "Kavoon, cursive",
@@ -717,8 +792,8 @@ const handleReset = () => {
         )}
       </div>
 
-        <div className=" absolute  top-58 right-105 z-30 ">       
-        {/* Botón regresar */}
+      {/* Botón Reiniciar */}
+      <div className=" absolute  top-58 right-105 z-30 ">
         {genero === "mujer" ? (
           <button
             onClick={handleReset}
@@ -740,15 +815,9 @@ const handleReset = () => {
             }}
           >
             Reiniciar <RotateCcw className="w-10 h-10 " strokeWidth={3} />
-           </button> 
+          </button>
         )}
       </div>
-
-
-
-
-
-
     </div>
   );
 }

@@ -283,7 +283,7 @@ export default function Login() {
           src={kidImage} 
           draggable={false}
           alt="kid with pencil" 
-          className="w-48 h-48 sm:w-56 sm:h-56 md:w-72 md:h-72 lg:w-96 lg:h-96 xl:w-[28rem] xl:h-[28rem] 2xl:w-[32rem] 2xl:h-[32rem] object-contain"
+          className="w-48 h-48 sm:w-56 sm:h-56 md:w-72 md:h-72 lg:w-130 lg:h-130 object-contain"
         />
       </div>
 

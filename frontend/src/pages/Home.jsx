@@ -17,7 +17,7 @@ import StarP from "../assets/StarPink.png";
 import StarG from "../assets/StarGreen.png";
 
 export default function Home() {
-  const [genero, setGenero] = useState("hombre"); // Estado para almacenar el género seleccionado
+  const [genero, setGenero] = useState("mujer"); // Estado para almacenar el género seleccionado
   const [userName, setUserName] = useState("Christopher");
   const [TotalStar, setTotalStar] = useState(100);
   const navigate = useNavigate();
