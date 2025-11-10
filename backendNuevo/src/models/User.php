@@ -35,6 +35,9 @@ class User extends Model
         'date_registered' => 'immutable_datetime',
     ];
 
+    // Oculta el hash de la contraseña al serializar a JSON
+    protected $hidden = ['password_hash'];
+
     public function progress()
     {
         return $this->hasOne(UserProgress::class, 'user_id');
