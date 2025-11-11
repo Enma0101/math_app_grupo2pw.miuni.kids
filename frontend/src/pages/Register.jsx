@@ -1,4 +1,4 @@
-import { useState , useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 // Importa tus imágenes
 import Background from '../assets/BackgroundLogin.svg';
@@ -71,11 +71,6 @@ export default function Register() {
         genero,
         contraseña
       });
-      
-  
-      
-    } else {
-
     }
   };
 
@@ -119,7 +114,7 @@ export default function Register() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Imagen de fondo */}
       <img 
         src={Background} 
@@ -127,11 +122,10 @@ export default function Register() {
         className="absolute w-full h-full object-cover object-center"
       />
       
-      <div className="absolute top-0 left-0 right-0 z-20 bg-ground-custom py-4 sm:py-6 md:py-12 lg:py-20 px-4 md:px-10"> 
-        {/* Navbar */}
-        <nav className="absolute top-0 left-0 right-0 z-20 bg-custom-gradient py-4 sm:py-6 md:py-10 lg:py-20 px-4 md:px-10">
-          {/* Logo y Título */}
-          <div className="absolute max-w-7xl mx-auto flex top-3 left-30 justify-between">
+      {/* Navbar - Más compacto */}
+      <div className="absolute top-0  left-0 right-0 z-20 bg-ground-custom py-2 sm:py-3 md:py-5 lg:py-30 px-5 md:px-10">
+        <nav className="absolute top-0 left-0 right-0 z-20 bg-custom-gradient py-2 sm:py-3 md:py-4 lg:py-30 px-4 md:px-10">
+          <div className="absolute max-w-7xl mx-auto flex top-2 left-20 sm:left-30 justify-between">
             <svg width="0" height="0">
               <filter id="inner-shadow" x="-50%" y="-50%" width="200%" height="200%">
                 <feOffset dx="3" dy="3"/>
@@ -143,14 +137,14 @@ export default function Register() {
               </filter>
             </svg>
             
-            <h1 className="text-5xl sm:text-5xl md:text-6xl lg:text-7xl font-bold" style={{
+            <h1 className="text-4xl sm:text-4xl md:text-5xl lg:text-7xl font-bold" style={{
               fontFamily: 'Kavoon, cursive',
               color:'#FFB212',
-              textShadow: `-10px 0px #262A51`,
+              textShadow: `-6px 0px #262A51`,
               filter: 'url(#inner-shadow)'
             }}>
               Math {' '}
-              <span style={{ display: 'block', textIndent: '4ch' }}>
+              <span style={{ display: 'block', textIndent: '3ch' }}>
                 School
               </span>
             </h1>
@@ -158,67 +152,67 @@ export default function Register() {
         </nav>
       </div>
 
+      {/* Elementos decorativos - Más grandes y mejor responsive */}
       {/* Star */}
-      <div className="absolute top-20 sm:top-24 md:top-28 lg:top-40 left-12 sm:left-16 md:left-40 lg:left-50 z-20 ">
+      <div className="absolute top-12 sm:top-16 md:top-20 lg:top-60 left-6 sm:left-10 md:left-14 lg:left-20 z-20">
         <img 
           src={Stars} 
           alt="Star" 
-          className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 object-contain"
+          className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-45 lg:h-45 xl:w-60 xl:h-60 object-contain  "
         />
       </div>
 
-         {/* Calculadora */}
-      <div className="absolute bottom-20 sm:bottom-20 md:bottom-20 lg:bottom-20 left-12 sm:left-20 md:left-20 lg:left-20 z-20 ">
+      {/* Calculadora */}
+      <div className="absolute bottom-12 sm:bottom-16 md:bottom-20 lg:bottom-24 left-6 sm:left-10 md:left-14 lg:left-20 z-20">
         <img 
           src={Calculater} 
-          alt="Star" 
-          className="w-20 h-20 sm:w-80 sm:h-80 md:w-80 md:h-80 lg:w-80 lg:h-80 xl:w-80 xl:h-80 object-contain"
+          alt="Calculator" 
+          className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 xl:w-80 xl:h-80 object-contain"
         />
       </div>
 
       {/* Note-Book */}
-      <div className="absolute bottom-14 sm:bottom-16 md:bottom-20 lg:bottom-24 right-12 sm:right-16 md:right-24 lg:right-32 z-20 ">
+      <div className="absolute bottom-8 sm:bottom-12 md:bottom-16 lg:bottom-20 right-6 sm:right-10 md:right-14 lg:right-20 z-20">
         <img 
           src={notebook} 
-          alt="notebook" 
-          className="w-20 h-20 sm:w-70 sm:h-70 md:w-70 md:h-70 lg:w-70 lg:h-70 xl:w-70 xl:h-70 object-contain"
+          alt="Notebook" 
+          className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 xl:w-80 xl:h-80 object-contain"
         />
       </div>
 
       {/* Imagen numeros 0,1,2 */}
-      <div className="absolute top-14 sm:top-16 md:top-30 lg:top-60 right-20 sm:right-30 md:right-50 lg:right-60 z-60 ">
+      <div className="absolute top-12 sm:top-16 md:top-20 lg:top-60 right-8 sm:right-12 md:right-16 lg:right-40 z-20">
         <img 
           src={Numbers102} 
           alt="Numbers102" 
-          className="w-32 h-28 sm:w-40 sm:h-36 md:w-52 md:h-44 lg:w-50 lg:h-50 xl:w-50 xl:h-50 object-contain"
+          className="w-24 h-20 sm:w-28 sm:h-24 md:w-32 md:h-28 lg:w-36 lg:h-32 xl:w-50 xl:h-50 object-contain"
         />
       </div>
 
-      
-      {/* simbolos*/}
-      <div className="absolute top-0 sm:top-0 md:top-0 lg:top-0 right-0 sm:right-15 md:right-20 lg:right-20 z-60 ">
+      {/* Simbolos */}
+      <div className="absolute top-2 sm:top-4 md:top-6 lg:top-8 right-2 sm:right-4 md:right-6 lg:right-8 z-20">
         <img 
           src={symbol} 
-          alt="symbol" 
-          className="w-32 h-28 sm:w-40 sm:h-36 md:w-52 md:h-44 lg:w-50 lg:h-50 xl:w-50 xl:h-50 object-contain"
+          alt="Symbol" 
+          className="w-20 h-16 sm:w-24 sm:h-20 md:w-28 md:h-24 lg:w-32 lg:h-28 xl:w-60 xl:h-60 object-contain"
         />
       </div>
 
-    {/* FORMULARIO DE Registro */}
-      <div className="relative z-50 top-16 w-[90%] max-w-md sm:max-w-5xl md:max-w-5xl lg:max-w-5xl ">
+      {/* FORMULARIO DE REGISTRO - Más compacto */}
+      <div className="relative z-50 w-[95%] sm:w-[90%] max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-4xl mt-16 sm:mt-20">
         {/* Borde naranja exterior */}
-        <div className="bg-custom-gradient-footer p-3 sm:p-4 md:p-5 rounded-3xl shadow-2xl">
+        <div className="bg-custom-gradient-footer p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl shadow-xl">
           {/* Fondo verde */}
           <div
-            className="bg-cover bg-center rounded-2xl p-5 sm:p-6 md:p-8"
+            className="bg-cover bg-center rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 lg:p-7"
             style={{ backgroundImage: `url(${fondo})` }}
           >
-            {/* Título Iniciar */}
+            {/* Título */}
             <h2
-              className="text-3xl sm:text-4xl md:text-5xl font-black text-center mb-5 sm:mb-7"
+              className="text-2xl sm:text-3xl md:text-4xl font-black text-center mb-4 sm:mb-5 md:mb-6"
               style={{
                 fontFamily: 'Kavoon, cursive',
-                textShadow: `-8px 0px #262A51`,
+                textShadow: `-5px 0px #262A51`,
                 color: '#FFB212',
                 filter: 'url(#inner-shadow)',
               }}
@@ -226,16 +220,16 @@ export default function Register() {
               Crea tu usuario
             </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               {/* Fila 1: Nombre y Usuario */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Nombre */}
                 <div>
                   <label
-                    className="block text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2"
+                    className="block text-base sm:text-lg md:text-xl font-bold mb-1 sm:mb-2"
                     style={{
                       fontFamily: 'Kavoon, cursive',
-                      textShadow: `-4px 0px #262A51`,
+                      textShadow: `-3px 0px #262A51`,
                       color: '#FFB212',
                     }}
                   >
@@ -249,13 +243,13 @@ export default function Register() {
                       setNombre(e.target.value);
                       limpiarError('nombre');
                     }}
-                    className={`w-full px-3 py-3 rounded-lg border-0 focus:outline-none focus:ring-4 focus:ring-yellow-400 text-lg font-semibold bg-white ${
+                    className={`w-full px-3 py-2 sm:py-3 rounded-lg border-0 focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-yellow-400 text-base sm:text-lg bg-white ${
                       errores.nombre ? 'ring-2 ring-red-500' : ''
                     }`}
                     style={{ fontFamily: 'Kavoon, cursive' }}
                   />
                   {errores.nombre && (
-                    <p className="text-red-500 text-md font-semibold mt-1" style={{
+                    <p className="text-white text-xs sm:text-sm mt-1" style={{
                       fontFamily: 'Kavoon, cursive',
                     }}>
                       {errores.nombre}
@@ -266,10 +260,10 @@ export default function Register() {
                 {/* Usuario */}
                 <div>
                   <label
-                    className="block text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2"
+                    className="block text-base sm:text-lg md:text-xl font-bold mb-1 sm:mb-2"
                     style={{
                       fontFamily: 'Kavoon, cursive',
-                      textShadow: `-4px 0px #262A51`,
+                      textShadow: `-3px 0px #262A51`,
                       color: '#FFB212',
                     }}
                   >
@@ -284,13 +278,13 @@ export default function Register() {
                       limpiarError('usuario');
                     }}
                     autoComplete="username"
-                    className={`w-full px-3 py-3 rounded-lg border-0 focus:outline-none focus:ring-4 focus:ring-yellow-400 text-lg font-semibold bg-white ${
+                    className={`w-full px-3 py-2 sm:py-3 rounded-lg border-0 focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-yellow-400 text-base sm:text-lg bg-white ${
                       errores.usuario ? 'ring-2 ring-red-500' : ''
                     }`}
                     style={{ fontFamily: 'Kavoon, cursive' }}
                   />
                   {errores.usuario && (
-                    <p className="text-red-500 text-md font-semibold mt-1" style={{
+                    <p className="text-white text-xs sm:text-sm mt-1" style={{
                       fontFamily: 'Kavoon, cursive',
                     }}>
                       {errores.usuario}
@@ -300,21 +294,21 @@ export default function Register() {
               </div>
 
               {/* Fila 2: Fecha de nacimiento y Edad */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Fecha de nacimiento */}
                 <div>
                   <label
-                    className="block text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2"
+                    className="block text-base sm:text-lg md:text-xl font-bold mb-1 sm:mb-2"
                     style={{
                       fontFamily: "Kavoon, cursive",
-                      textShadow: `-4px 0px #262A51`,
+                      textShadow: `-3px 0px #262A51`,
                       color: "#FFB212",
                     }}
                   >
                     Fecha de nacimiento
                   </label>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-1 sm:gap-2">
                     {/* Mes */}
                     <div>
                       <input
@@ -328,24 +322,22 @@ export default function Register() {
                             setMes(value);
                             limpiarError('mes');
                           } else {
-                            setErrorMes("El mes debe estar entre 1 y 12");
+                            setErrorMes("1-12");
                           }
                         }}
                         maxLength={2}
-                        className={`w-full px-3 py-3 rounded-lg border-0 focus:outline-none focus:ring-4 focus:ring-yellow-400 text-lg font-semibold bg-white ${
+                        className={`w-full px-2 sm:px-3 py-2 sm:py-3 rounded-lg border-0 focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-yellow-400 text-base sm:text-lg bg-white ${
                           errores.mes ? 'ring-2 ring-red-500' : ''
                         }`}
                         style={{ fontFamily: "Kavoon, cursive" }}
                       />
                       {errorMes && (
-                        <p className="text-red-500 text-md font-semibold mt-1" style={{
-                          fontFamily: "Kavoon, cursive",
-                        }}>{errorMes}</p>
+                        <p className="text-white text-xs sm:text-sm mt-1" style={{ fontFamily: "Kavoon, cursive" }}>
+                          {errorMes}
+                        </p>
                       )}
                       {errores.mes && !errorMes && (
-                        <p className="text-red-500 text-md font-semibold mt-1" style={{
-                          fontFamily: "Kavoon, cursive",
-                        }}>
+                        <p className="text-white text-xs sm:text-sm mt-1" style={{ fontFamily: "Kavoon, cursive" }}>
                           {errores.mes}
                         </p>
                       )}
@@ -364,24 +356,22 @@ export default function Register() {
                             setDia(value);
                             limpiarError('dia');
                           } else {
-                            setErrorDia("El día debe estar entre 1 y 31");
+                            setErrorDia("1-31");
                           }
                         }}
                         maxLength={2}
-                        className={`w-full px-3 py-3 rounded-lg border-0 focus:outline-none focus:ring-4 focus:ring-yellow-400 text-lg font-semibold bg-white ${
+                        className={`w-full px-2 sm:px-3 py-2 sm:py-3 rounded-lg border-0 focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-yellow-400 text-base sm:text-lg bg-white ${
                           errores.dia ? 'ring-2 ring-red-500' : ''
                         }`}
                         style={{ fontFamily: "Kavoon, cursive" }}
                       />
                       {errorDia && (
-                        <p className="text-red-500 text-md font-semibold mt-1" style={{
-                          fontFamily: "Kavoon, cursive",
-                        }}>{errorDia}</p>
+                        <p className="text-white text-xs sm:text-sm mt-1" style={{ fontFamily: "Kavoon, cursive" }}>
+                          {errorDia}
+                        </p>
                       )}
                       {errores.dia && !errorDia && (
-                        <p className="text-red-500 text-md font-semibold mt-1" style={{
-                          fontFamily: "Kavoon, cursive",
-                        }}>
+                        <p className="text-white text-xs sm:text-sm mt-1" style={{ fontFamily: "Kavoon, cursive" }}>
                           {errores.dia}
                         </p>
                       )}
@@ -405,26 +395,24 @@ export default function Register() {
                           if (año !== "") {
                             const numYear = Number(año);
                             if (numYear < 1900 || numYear > currentYear) {
-                              setErrorAño(`El año debe estar entre 1900 y ${currentYear}`);
+                              setErrorAño(`1900-${currentYear}`);
                               setAño("");
                             }
                           }
                         }}
                         maxLength={4}
-                        className={`w-full px-3 py-3 rounded-lg border-0 focus:outline-none focus:ring-4 focus:ring-yellow-400 text-lg font-semibold bg-white ${
+                        className={`w-full px-2 sm:px-3 py-2 sm:py-3 rounded-lg border-0 focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-yellow-400 text-base sm:text-lg bg-white ${
                           errores.año ? 'ring-2 ring-red-500' : ''
                         }`}
                         style={{ fontFamily: "Kavoon, cursive" }}
                       />
                       {errorAño && (
-                        <p className="text-red-500 text-md font-semibold mt-1" style={{
-                          fontFamily: "Kavoon, cursive",
-                        }}>{errorAño}</p>
+                        <p className="text-white text-xs sm:text-sm mt-1" style={{ fontFamily: "Kavoon, cursive" }}>
+                          {errorAño}
+                        </p>
                       )}
                       {errores.año && !errorAño && (
-                        <p className="text-red-500 text-md font-semibold mt-1" style={{
-                          fontFamily: "Kavoon, cursive",
-                        }}>
+                        <p className="text-white text-xs sm:text-sm mt-1" style={{ fontFamily: "Kavoon, cursive" }}>
                           {errores.año}
                         </p>
                       )}
@@ -435,10 +423,10 @@ export default function Register() {
                 {/* Edad */}
                 <div>
                   <label
-                    className="block text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2"
+                    className="block text-base sm:text-lg md:text-xl font-bold mb-1 sm:mb-2"
                     style={{
                       fontFamily: 'Kavoon, cursive',
-                      textShadow: `-4px 0px #262A51`,
+                      textShadow: `-3px 0px #262A51`,
                       color: '#FFB212',
                     }}
                   >
@@ -448,13 +436,13 @@ export default function Register() {
                     type="text"
                     value={edad}
                     readOnly
-                    className={`w-1/3 px-3 py-3 rounded-lg border-0 focus:outline-none text-lg font-semibold bg-gray-100 cursor-not-allowed ${
+                    className={`w-full sm:w-1/2 px-3 py-2 sm:py-3 rounded-lg border-0 focus:outline-none text-base sm:text-lg bg-gray-100 cursor-not-allowed ${
                       errores.edad ? 'ring-2 ring-red-500' : ''
                     }`}
                     style={{ fontFamily: 'Kavoon, cursive' }}
                   />
                   {errores.edad && (
-                    <p className="text-red-500 text-md font-semibold mt-1" style={{
+                    <p className="text-white text-xs sm:text-sm mt-1" style={{
                       fontFamily: 'Kavoon, cursive',
                     }}>
                       {errores.edad}
@@ -464,14 +452,14 @@ export default function Register() {
               </div>
 
               {/* Fila 3: Contraseña y Género */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Contraseña */}
                 <div className="relative">
                   <label
-                    className="block text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2"
+                    className="block text-base sm:text-lg md:text-xl font-bold mb-1 sm:mb-2"
                     style={{
                       fontFamily: 'Kavoon, cursive',
-                      textShadow: `-4px 0px #262A51`,
+                      textShadow: `-3px 0px #262A51`,
                       color: '#FFB212',
                     }}
                   >
@@ -487,98 +475,97 @@ export default function Register() {
                         setContraseña(e.target.value);
                         limpiarError('contraseña');
                       }}
-                      className={`w-full px-4 py-3 rounded-lg border-0 focus:outline-none focus:ring-4 focus:ring-yellow-400 text-lg font-semibold bg-white pr-12 ${
+                      className={`w-full  px-3 py-2 sm:py-3 rounded-lg border-0 focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-yellow-400 text-base sm:text-lg bg-white pr-10 sm:pr-12 ${
                         errores.contraseña ? 'ring-2 ring-red-500' : ''
                       }`}
                       style={{ fontFamily: 'Kavoon, cursive' }}
                     />
 
-                      {contraseña && (
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 flex items-center justify-center"
-                                style={{
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                }}
-                            >
-                                {showPassword ? (
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="w-7 h-7 text-yellow-600"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.682-7 .885-2.577 2.8-4.746 5.253-6.125M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                    />
-                                    <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M3 3l18 18"
-                                    />
-                                </svg>
-                                ) : (
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="w-7 h-7 text-yellow-600"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                    />
-                                    <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                    />
-                                </svg>
-                                )}
-                            </button>
-    )}
+                    {contraseña && (
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2 sm:right-3 flex items-center justify-center"
+                        style={{
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                        }}
+                      >
+                        {showPassword ? (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.682-7 .885-2.577 2.8-4.746 5.253-6.125M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 3l18 18"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    )}
                   </div>
                   {errores.contraseña && (
-                    <p className="text-red-500 text-md font-semibold mt-1" style={{
+                    <p className="text-white text-xs sm:text-sm mt-1" style={{
                       fontFamily: 'Kavoon, cursive',
                     }}>
                       {errores.contraseña}
                     </p>
                   )}
                 </div>
-                
 
                 {/* Género */}
                 <div>
                   <label
-                    className="block text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2"
+                    className="block text-base sm:text-lg md:text-xl font-bold mb-1 sm:mb-2"
                     style={{
                       fontFamily: 'Kavoon, cursive',
-                      textShadow: `-4px 0px #262A51`,
+                      textShadow: `-3px 0px #262A51`,
                       color: '#FFB212',
                     }}
                   >
                     Selecciona tu género:
                   </label>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2 sm:gap-3">
                     <button
                       type="button"
                       onClick={() => {
                         setGenero('mujer');
                         limpiarError('genero');
                       }}
-                      className={`flex items-center gap-1 px-5 py-5 rounded-lg transition-all ${
+                      className={`flex items-center gap-1 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-all text-sm sm:text-base ${
                         genero === 'mujer'
                           ? 'bg-pink-400 text-white scale-105'
                           : 'bg-white text-gray-700'
@@ -593,7 +580,7 @@ export default function Register() {
                         setGenero('hombre');
                         limpiarError('genero');
                       }}
-                      className={`flex gap-3 px-5 py-5 rounded-lg transition-all ${
+                      className={`flex items-center gap-1 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-all text-sm sm:text-base ${
                         genero === 'hombre'
                           ? 'bg-blue-400 text-white scale-105'
                           : 'bg-white text-gray-700'
@@ -604,7 +591,7 @@ export default function Register() {
                     </button>
                   </div>
                   {errores.genero && (
-                    <p className="text-red-500 text-md font-semibold mt-1" style={{
+                    <p className="text-white text-xs sm:text-sm mt-1" style={{
                       fontFamily: 'Kavoon, cursive',
                     }}>
                       {errores.genero}
@@ -616,10 +603,10 @@ export default function Register() {
               {/* Confirmar Contraseña */}
               <div className="relative">
                 <label
-                  className="block text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2"
+                  className="block text-base sm:text-lg md:text-xl font-bold mb-1 sm:mb-2"
                   style={{
                     fontFamily: 'Kavoon, cursive',
-                    textShadow: `-4px 0px #262A51`,
+                    textShadow: `-3px 0px #262A51`,
                     color: '#FFB212',
                   }}
                 >
@@ -635,71 +622,70 @@ export default function Register() {
                       setContraseñaConfirma(e.target.value);
                       limpiarError('contraseñaConfirma');
                     }}
-                    className={`w-1/2 px-4 py-3 rounded-lg border-0 focus:outline-none focus:ring-4 focus:ring-yellow-400 text-lg font-semibold bg-white pr-12 ${
+                    className={`w-full md:w-98 px-3 py-2 sm:py-3 rounded-lg border-0 focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-yellow-400 text-base sm:text-lg bg-white pr-12 sm:pr-12 ${
                       errores.contraseñaConfirma ? 'ring-2 ring-red-500' : ''
                     }`}
                     style={{ fontFamily: 'Kavoon, cursive' }}
                   />
 
                   {contraseñaConfirma && (
-                            <button
-                                type="button"
-                                onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
-                                className="absolute  left-105 flex items-center justify-center"
-                                style={{
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                }}
-                            >
-                                {showPasswordConfirm ? (
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="w-7 h-7 text-yellow-600"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.682-7 .885-2.577 2.8-4.746 5.253-6.125M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                    />
-                                    <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M3 3l18 18"
-                                    />
-                                </svg>
-                                ) : (
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="w-7 h-7 text-yellow-600"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                    />
-                                    <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                    />
-                                </svg>
-                                )}
-                            </button>
- 
-         )}
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                      className="absolute right-2 sm:right-105 flex items-center justify-center"
+                      style={{
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                      }}
+                    >
+                      {showPasswordConfirm ? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.682-7 .885-2.577 2.8-4.746 5.253-6.125M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 3l18 18"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  )}
                 </div>
                 {errores.contraseñaConfirma && (
-                  <p className="text-red-500 text-md font-semibold mt-1" style={{
+                  <p className="text-white text-xs sm:text-sm mt-1" style={{
                     fontFamily: 'Kavoon, cursive',
                   }}>
                     {errores.contraseñaConfirma}
@@ -708,18 +694,18 @@ export default function Register() {
               </div>
 
               {/* Botones */}
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-3 sm:gap-4 pt-3 sm:pt-4">
                 <button
-                onClick={ handleLoginClick }
+                  onClick={handleLoginClick}
                   type="button"
-                  className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-green-800 font-black text-xl py-3 rounded-xl border-4 border-yellow-600 shadow-lg transform hover:scale-105 transition-transform"
+                  className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-green-800 font-black text-base sm:text-lg py-2 sm:py-3 rounded-xl border-3 sm:border-4 border-yellow-600 shadow-lg transform hover:scale-105 transition-transform"
                   style={{ fontFamily: 'Kavoon, cursive' }}
                 >
                   Salir
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-green-800 font-black text-xl py-3 rounded-xl border-4 border-yellow-600 shadow-lg transform hover:scale-105 transition-transform"
+                  className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-green-800 font-black text-base sm:text-lg py-2 sm:py-3 rounded-xl border-3 sm:border-4 border-yellow-600 shadow-lg transform hover:scale-105 transition-transform"
                   style={{ fontFamily: 'Kavoon, cursive' }}
                 >
                   Crear
@@ -731,7 +717,7 @@ export default function Register() {
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 bg-custom-gradient-footer py-6 sm:py-8 md:py-10 lg:py-14 xl:py-16 px-4 md:px-10 text-white text-center">
+      <div className="absolute bottom-0 left-0 right-0 z-10 bg-custom-gradient-footer py-4 sm:py-6 md:py-8 lg:py-10 px-4 text-white text-center">
       </div>
     </div>
   );

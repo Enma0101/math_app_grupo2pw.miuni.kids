@@ -1,14 +1,73 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Sansation';
+  src: url('/src/assets/fonts/Sansation-Bold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html, body {
+  cursor: url('/arrowclick.png') 0 0, auto;
+}
+
+button, a {
+  cursor: url('/mouseclicks.png') 0 0 , pointer;
+}
+
+label {
+  cursor: url('/arrowclick.png'), auto;
+}
+
+input {
+  cursor: url('/textclicks.png') , auto;
+}
+
+
 .bg-custom-gradient {
   background: linear-gradient(
     to left,
     #3681C4 0%,
-    #8154C556 100%
+    #8154C599 100%
   );
+}
+
+.bg-custom-gradient-girl {
+  background: linear-gradient(
+    to left,
+    #5E36C4 0%,
+    #C3929359 100%
+  );
+}
+
+
+.bg-custom-gradient-girl2 {
+  background: linear-gradient(
+    to right,
+    #3681C4 0%,
+    #8054AE 100%,
+    #B5359E 100%,
+    #EC148E 100%
+  );
+}
+
+.bg-ground-custom-selector {
+  background-color: #21b94aff;
+}
+
+
+
+.bg-ground-custom2 {
+  background-color: #00C7DB;
+}
+.bg-ground-custom2girl {
+  background-color: #FB0000;
 }
 .bg-ground-custom {
   background-color: #3681C4;
+}
+.bg-ground-custom-girl {
+  background-color: #E50E11;
 }
 
 
@@ -20,6 +79,12 @@
     #FF9254 100%
   );
 }
+
+
+.bg-custom-gradient-letter {
+  background: linear-gradient(to right, #8154C5, #FFB212);
+}
+
 
 @keyframes subtleBounce {
   0%, 100% {
@@ -34,11 +99,95 @@
 }
 
 .subtle-bounce {
-  animation: subtleBounce 1.2s ease-in-out infinite;
+  animation: subtleBounce 2s ease-in-out infinite;
 }
 
 /* Ocultar el ojo nativo del navegador */
 input::-ms-reveal,
 input::-webkit-textfield-decoration-container {
   display: none !important;
+}
+
+.mi-alerta-popup {
+  font-family: "Kavoon","semibold";
+}
+
+.mi-alerta-titulo {
+  font-family: "Kavoon","semibold";
+  font-size: 24px;
+}
+
+.mi-alerta-texto {
+  font-family: "Kavoon","semibold";
+  font-size: 25px;
+  
+}
+
+.alerta-redondeada {
+  border-radius: 60px;
+  border: 3px solid rgba(0, 0, 0, 0.292);
+  font-family: "Kavoon", cursive;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes brillar {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+
+
+.alerta-kids {
+  border: 4px , #fff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+  animation: brillar 1.5s infinite;
+  
+
+}
+
+.mi-boton-cancelar {
+  background-color: #ff0000;
+  color: white;
+  font-family: "Kavoon", cursive;
+  font-size: 1.2rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.455);
+  transition: transform 0.3s ease;
+}
+
+.mi-boton-confirmar:hover {
+  transform: scale(1.05);
+}
+
+.mi-boton-confirmar {
+  background-color: #03f90ffd;
+  color: white;
+  font-family: "Kavoon", cursive;
+  font-size: 1.2rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 0 10px rgba(128, 240, 139, 0.5);
+  transition: transform 0.3s ease;
+}
+
+.mi-boton-cancelar:hover {
+  transform: scale(1.05);
+}
+
+
+
+.swal2-popup {
+  z-index: 1;
+}
+
+.swal2-popup,
+.swal2-confirm,
+.swal2-cancel,
+.swal2-title,
+.swal2-html-container {
+  cursor: url('/mouseclicks.png'), auto !important;
 }
