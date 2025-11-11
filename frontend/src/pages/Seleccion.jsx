@@ -16,7 +16,10 @@ import StarYG from "../assets/StarYG.png";
 import StarP from "../assets/StarPink.png";
 import StarG from "../assets/StarGreen.png";
 
+import { useAudio, AudioControl } from "../components/AudioManager";
+
 export default function Seleccion() {
+   const { playClick,playClickButton ,playAudio } = useAudio();
  // Estado para almacenar el género seleccionado
  
   const [userName, setUserName] = useState("Enmanuel");
@@ -37,7 +40,7 @@ export default function Seleccion() {
   return (
     <div className="h-screen bg-gradient-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {/* Imagen de fondo */}
-
+      <AudioControl genero={genero} />
       {genero === "mujer" ? (
         <img
           src={Backgroundgirl}
@@ -222,31 +225,7 @@ export default function Seleccion() {
             </div>
 
             <div className="flex-1 flex justify-end items-start">
-              {genero === "mujer" ? (
-                <h1
-                  className="sm:text-2xl md:text-3xl lg:text-5xl font-bold"
-                  style={{
-                    fontFamily: "Kavoon, cursive",
-                    color: "#FFFFFF",
-                    textShadow: "-10px 0px #852526",
-                    filter: "url(#inner-shadow)",
-                  }}
-                >
-                  progreso Level
-                </h1>
-              ) : (
-                <h1
-                  className="sm:text-2xl md:text-3xl lg:text-5xl font-bold"
-                  style={{
-                    fontFamily: "Kavoon, cursive",
-                    color: "#FFB212",
-                    textShadow: "-10px 0px #262A51",
-                    filter: "url(#inner-shadow)",
-                  }}
-                >
-                  progreso Level
-                </h1>
-              )}
+           
             </div>
           </div>
         </nav>
@@ -406,7 +385,7 @@ export default function Seleccion() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-30">
         {/* Botón Sumar */}
         <button
-          onClick={() => handleActivity("Facil")}
+          onClick={() =>{ handleActivity("Facil"); playClickButton()}}
           className={` group relative rounded-3xl  bottom-70 w-100 h-60 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
             ${
               genero === "mujer"
@@ -415,6 +394,7 @@ export default function Seleccion() {
                 ? "bg-ground-custom2 bg-custom-gradient"
                 : "bg-gray-400"
             }`}
+            onMouseEnter={() => playClick()}
         >
           {/* Contenedor flex para alinear imagen y texto */}
           <div className="flex justify-center ">
@@ -450,7 +430,7 @@ export default function Seleccion() {
         </button>
 
         <button
-          onClick={() => handleActivity("Medio")}
+          onClick={() =>{ handleActivity("Medio"); playClickButton()}}
           className={`group relative rounded-3xl p-10 bottom-50 w-110 h-60 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
             ${
               genero === "mujer"
@@ -459,6 +439,7 @@ export default function Seleccion() {
                 ? "bg-ground-custom2 bg-custom-gradient"
                 : "bg-gray-400"
             }`}
+            onMouseEnter={() => playClick()}
         >
           {/* Contenedor flex para alinear imagen y texto */}
           <div className="flex justify-center ">
@@ -493,7 +474,7 @@ export default function Seleccion() {
           </div>
         </button>
         <button
-          onClick={() => handleActivity("Dificil")} 
+          onClick={() => {handleActivity("Dificil"); playClickButton();  } }
           className={` group relative rounded-3xl p-10 bottom-70 w-100 h-60 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
             ${
               genero === "mujer"
@@ -502,6 +483,7 @@ export default function Seleccion() {
                 ? "bg-ground-custom2 bg-custom-gradient"
                 : "bg-gray-400"
             }`}
+            onMouseEnter={() => playClick()}
         >
           {/* Contenedor flex para alinear imagen y texto */}
           <div className="flex justify-center ">
@@ -577,6 +559,7 @@ export default function Seleccion() {
           <button
             onClick={() => {
              navigate ("/Home");
+             playClickButton();
             }}
             className=" text-6xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
             style={{
@@ -584,6 +567,7 @@ export default function Seleccion() {
               color: "#5F005C",
               filter: "url(#inner-shadow)",
             }}
+            onMouseEnter={() => playClick()}
           >
             <Undo className="w-20 h-20 " strokeWidth={3} />
            Regresar
@@ -593,6 +577,7 @@ export default function Seleccion() {
           <button
            onClick={() => {
              navigate ("/Home");
+              playClickButton();
             }}
             className=" text-6xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
             style={{
@@ -600,6 +585,7 @@ export default function Seleccion() {
               color: "#262A51",
               filter: "url(#inner-shadow)",
             }}
+            onMouseEnter={() => playClick()}
           > 
           <Undo className="w-20 h-20 " strokeWidth={3} />
             Regresar

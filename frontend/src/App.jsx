@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AudioProvider } from './components/AudioManager';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
@@ -6,9 +7,10 @@ import Seleccion from './pages/Seleccion';
 import Game from './pages/Game';
 import Exercise from './pages/Exercise';
 import './index.css';
-
+AudioProvider
 function App() {
   return (
+    <AudioProvider>
     <Router>
       <Routes>
        <Route path="/" element={<Navigate to="/login" replace />} />
@@ -22,6 +24,8 @@ function App() {
 
       </Routes>
     </Router>
+
+    </AudioProvider>
   );
 }
 

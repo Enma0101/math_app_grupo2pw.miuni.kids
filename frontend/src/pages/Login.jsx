@@ -11,17 +11,20 @@ import Star from '../assets/Star.png';
 import notebook from '../assets/notebook.png';
 import plus from '../assets/Plus.png';
 import fondo from '../assets/Backgroundinicio 6.svg';
-
+import { useAudio } from '../components/AudioManager';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const handleSubmit = (e) => {
-    e.preventDefault();
 
-    
+  const { unlockAudio } = useAudio();
+
+    const handleSubmit = (e) => {
+    e.preventDefault();
+    unlockAudio();       
+    navigate('/Home');   
   };
   const handleRegisterClick = () => {
     navigate('/register'); 

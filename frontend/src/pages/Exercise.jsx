@@ -18,10 +18,25 @@ import StarR from "../assets/starR.png";
 import Cat from "../assets/catawesome.gif";
 import Catsad from "../assets/catsad.gif";
 import { updateExerciseInStorage } from "../utils/exerciseGenerator";
+import { useAudio } from "../components/AudioManager";
 
-export default function Exercise() {
+export default function Exercise({ onExit }) {
   const { state } = useLocation();
   const navigate = useNavigate();
+
+  // ✅ IMPORTAR FUNCIONES DE AUDIO
+  const { playClick, playClickButton, playCorrect, playCorrect2, playincorrect, pauseAudio , addnumber,playAudio } = useAudio();
+
+  // ✅ PAUSAR MÚSICA DE FONDO AL ENTRAR
+  useEffect(() => {
+    // Pausa música de fondo al entrar al módulo
+    pauseAudio();
+
+    // Reanuda la música al salir
+    return () => {
+      playAudio();
+    };
+  }, []);
 
   // ✅ RECIBIR DATOS DESDE GAME
   const {
@@ -116,11 +131,21 @@ export default function Exercise() {
 
     if (filledCount > 0) {
       const startIndex = 5 - filledCount;
-      const userAnswerString = answer.slice(startIndex).join("");
+      userAnswerString = answer.slice(startIndex).join("");
 
       // Validar
       if (userAnswerString === correctAnswer) {
         setValidationResult("correct");
+        
+        // ✅ REPRODUCIR SONIDO DE CORRECTO
+        playCorrect();
+        
+        // ✅ AUMENTAR RACHA Y REPRODUCIR SONIDO ESPECIAL
+        setcurrent_streak(prev => {
+          const newStreak = prev + 1;
+          playCorrect2(); // Sonido cuando aumenta la racha
+          return newStreak;
+        });
 
         // ✅ ACTUALIZAR EL EJERCICIO EN STORAGE
         const updatedExercise = {
@@ -139,6 +164,9 @@ export default function Exercise() {
         );
       } else {
         setValidationResult("incorrect");
+        
+        // ✅ REPRODUCIR SONIDO DE INCORRECTO
+        playincorrect();
       }
     } else {
       if (!userAnswerString) {
@@ -196,41 +224,53 @@ export default function Exercise() {
 
   // ✅ FUNCIÓN PARA CONTINUAR AL SIGUIENTE EJERCICIO O REGRESAR
   const handleContinue = () => {
-  // 🔹 Desactivar visuales antes de cambiar de pantalla
-  setValidationResult(null);
-  setCarries([0, 0, 0, 0]);
-  setAnswer(["", "", "", "", ""]);
-  
-  // 🔹 Pequeño delay para permitir limpiar la interfaz (200ms)
-  setTimeout(() => {
-    if (allExercises && exerciseIndex < allExercises.length - 1) {
-      // ✅ BUSCAR EL SIGUIENTE EJERCICIO NO COMPLETADO
-      let nextIndex = exerciseIndex + 1;
-      
-      // Buscar el siguiente ejercicio que no esté completado
-      while (nextIndex < allExercises.length) {
-        const nextExercise = allExercises[nextIndex];
-        // Si el ejercicio no está completado (is_correct no es true), lo usamos
-        if (!nextExercise.is_correct) {
-          break;
+    playClickButton();
+    
+    // 🔹 Desactivar visuales antes de cambiar de pantalla
+    setValidationResult(null);
+    setCarries([0, 0, 0, 0]);
+    setAnswer(["", "", "", "", ""]);
+    
+    // 🔹 Pequeño delay para permitir limpiar la interfaz (200ms)
+    setTimeout(() => {
+      if (allExercises && exerciseIndex < allExercises.length - 1) {
+        // ✅ BUSCAR EL SIGUIENTE EJERCICIO NO COMPLETADO
+        let nextIndex = exerciseIndex + 1;
+        
+        // Buscar el siguiente ejercicio que no esté completado
+        while (nextIndex < allExercises.length) {
+          const nextExercise = allExercises[nextIndex];
+          // Si el ejercicio no está completado (is_correct no es true), lo usamos
+          if (!nextExercise.is_correct) {
+            break;
+          }
+          nextIndex++;
         }
-        nextIndex++;
-      }
-      
-      // ✅ VERIFICAR SI ENCONTRAMOS UN EJERCICIO NO COMPLETADO
-      if (nextIndex < allExercises.length) {
-        navigate("/Exercise", {
-          state: {
-            exercise: allExercises[nextIndex],
-            exerciseIndex: nextIndex,
-            kindOperation,
-            genero,
-            nivel,
-            allExercises,
-          },
-        });
+        
+        // ✅ VERIFICAR SI ENCONTRAMOS UN EJERCICIO NO COMPLETADO
+        if (nextIndex < allExercises.length) {
+          navigate("/Exercise", {
+            state: {
+              exercise: allExercises[nextIndex],
+              exerciseIndex: nextIndex,
+              kindOperation,
+              genero,
+              nivel,
+              allExercises,
+            },
+          });
+        } else {
+          // ✅ SI TODOS LOS EJERCICIOS ESTÁN COMPLETADOS, IR AL JUEGO
+          navigate("/Game", {
+            state: {
+              kindOperation,
+              genero,
+              nivel,
+            },
+          });
+        }
       } else {
-        // ✅ SI TODOS LOS EJERCICIOS ESTÁN COMPLETADOS, IR AL JUEGO
+        // ✅ SI ES EL ÚLTIMO EJERCICIO, IR AL JUEGO
         navigate("/Game", {
           state: {
             kindOperation,
@@ -239,20 +279,12 @@ export default function Exercise() {
           },
         });
       }
-    } else {
-      // ✅ SI ES EL ÚLTIMO EJERCICIO, IR AL JUEGO
-      navigate("/Game", {
-        state: {
-          kindOperation,
-          genero,
-          nivel,
-        },
-      });
-    }
-  }, 200);
-};
+    }, 200);
+  };
+
   // ✅ FUNCIÓN PARA REGRESAR A GAME
   const handleGoBack = () => {
+    playClickButton();
     navigate("/Game", {
       state: {
         kindOperation: kindOperation,
@@ -533,7 +565,7 @@ export default function Exercise() {
                 {carries.map((carry, index) => (
                   <button
                     key={`carry-${index}`}
-                    onClick={() => handleCarryClick(index)}
+                    onClick={() =>{ handleCarryClick(index),addnumber()}}
                     className="w-12 h-12  flex justify-center items-center border-1 border-black/10 rounded-2xl font-semibold text-4xl transition-all shadow-md 
                       text-white text-center hover:scale-110 cursor-pointer"
                     style={{
@@ -606,7 +638,7 @@ export default function Exercise() {
                 {answer.map((digit, index) => (
                   <button
                     key={`answer-${index}`}
-                    onClick={() => handleAnswerClick(index)}
+                    onClick={() => {handleAnswerClick(index),addnumber()}}
                     disabled={
                       !isAnswerEnabled(index) || validationResult === "correct"
                     }
@@ -711,6 +743,7 @@ export default function Exercise() {
                 handleContinue();
                 handleReset();
               }}
+              onMouseEnter={() => playClick()}
               className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
               style={{
                 fontFamily: "Kavoon, cursive",
@@ -726,6 +759,7 @@ export default function Exercise() {
                 handleContinue();
                 handleReset();
               }}
+              onMouseEnter={() => playClick()}
               className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
               style={{
                 fontFamily: "Kavoon, cursive",
@@ -742,6 +776,7 @@ export default function Exercise() {
           {genero === "mujer" ? (
             <button
               onClick={handleVerify}
+              onMouseEnter={() => playClick()}
               className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
               style={{
                 fontFamily: "Kavoon, cursive",
@@ -753,6 +788,7 @@ export default function Exercise() {
           ) : (
             <button
               onClick={handleVerify}
+              onMouseEnter={() => playClick()}
               className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
               style={{
                 fontFamily: "Kavoon, cursive",
@@ -769,7 +805,8 @@ export default function Exercise() {
       <div className=" absolute  bottom-10 right-25 z-30 ">
         {genero === "mujer" ? (
           <button
-            onClick={handleGoBack}
+            onClick={() => {handleGoBack(),playAudio()}}
+            onMouseEnter={() => playClick()}
             className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
             style={{
               fontFamily: "Kavoon, cursive",
@@ -780,7 +817,8 @@ export default function Exercise() {
           </button>
         ) : (
           <button
-            onClick={handleGoBack}
+            onClick={() => {handleGoBack(),playAudio()}}
+            onMouseEnter={() => {playClick()}}
             className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
             style={{
               fontFamily: "Kavoon, cursive",
@@ -796,7 +834,11 @@ export default function Exercise() {
       <div className=" absolute  top-58 right-105 z-30 ">
         {genero === "mujer" ? (
           <button
-            onClick={handleReset}
+            onClick={() => {
+              playClickButton();
+              handleReset();
+            }}
+            onMouseEnter={() => playClick()}
             className=" text-4xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
             style={{
               fontFamily: "Kavoon, cursive",
@@ -807,12 +849,16 @@ export default function Exercise() {
           </button>
         ) : (
           <button
-            onClick={handleReset}
+            onClick={() => {
+              playClickButton();
+              handleReset();
+            }}
             className=" text-4xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
             style={{
               fontFamily: "Kavoon, cursive",
               color: "#FFB212",
             }}
+            onMouseEnter={() => playClick()}
           >
             Reiniciar <RotateCcw className="w-10 h-10 " strokeWidth={3} />
           </button>
