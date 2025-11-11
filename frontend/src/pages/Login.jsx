@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import Swal from 'sweetalert2';
 // Importa tus imágenes
 import Background from '../assets/BackgroundLogin.svg';
 import kidImage from '../assets/Child.png';
@@ -18,10 +20,20 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const { login, loading } = useAuth();
 
-    
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!username || !password) {
+      Swal.fire({ icon: 'warning', title: 'Campos requeridos', text: 'Usuario y contraseña son obligatorios' });
+      return;
+    }
+    const res = await login(username, password);
+    if (res.ok) {
+      navigate('/Home');
+    } else {
+      Swal.fire({ icon: 'error', title: 'No se pudo iniciar sesión', text: res.message || 'Verifica tus credenciales' });
+    }
   };
   const handleRegisterClick = () => {
     navigate('/register'); 
@@ -262,14 +274,15 @@ export default function Login() {
                         </div>
 
                         {/* Botón Entrar */}
-                        <button
+            <button
                         type="submit"
-                        className="w-full bg-yellow-400 hover:bg-yellow-500 text-green-800 font-black text-2xl sm:text-3xl py-2 sm:py-3 rounded-xl border-4 border-yellow-600 shadow-lg transform hover:scale-105 transition-transform mt-3 sm:mt-5"
+            disabled={loading}
+            className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:opacity-60 text-green-800 font-black text-2xl sm:text-3xl py-2 sm:py-3 rounded-xl border-4 border-yellow-600 shadow-lg transform hover:scale-105 transition-transform mt-3 sm:mt-5"
                         style={{
                             fontFamily: 'Kavoon, cursive',
                         }}
                         >
-                        Entrar
+            {loading ? 'Entrando...' : 'Entrar'}
                         </button>
                     </form>
                     </div>

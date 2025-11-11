@@ -7,8 +7,13 @@ use App\Controllers\ProgressController;
 use Slim\Routing\RouteCollectorProxy;
 use App\Middlewares\AuthMiddleware;
 
-// Preflight
-$app->options('/{routes:.+}', fn($r,$h)=>$h->handle($r));
+// Preflight CORS: responder vacío sin reenrutar (evita 500 y Method Not Allowed)
+$app->options('/{routes:.+}', function($request, $response){
+  return $response
+    ->withHeader('Access-Control-Allow-Origin', $_ENV['CORS_ORIGIN'] ?? '*')
+    ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept')
+    ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+});
 
 // Salud
 $app->get('/', fn($req,$res)=>\App\Helpers\JsonResponder::success($res, ['hello'=>'math_app']));

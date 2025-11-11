@@ -6,18 +6,19 @@ import Seleccion from './pages/Seleccion';
 import Game from './pages/Game';
 import Exercise from './pages/Exercise';
 import './index.css';
+import { ProtectedRoute } from './context/AuthContext.jsx';
 
 function App() {
   return (
     <Router>
       <Routes>
-       <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-         <Route path="/Home" element={<Home />} />
-          <Route path="/Seleccion" element={<Seleccion />} />
-            <Route path="/Game" element={<Game />} />
-             <Route path="/Exercise" element={<Exercise />} />
+        <Route path="/Home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/Seleccion" element={<ProtectedRoute><Seleccion /></ProtectedRoute>} />
+        <Route path="/Game" element={<ProtectedRoute><Game /></ProtectedRoute>} />
+        <Route path="/Exercise" element={<ProtectedRoute><Exercise /></ProtectedRoute>} />
 
 
       </Routes>
