@@ -21,11 +21,15 @@ import {
   generateCompletelyNewExercises,
 } from "../utils/exerciseGenerator";
 
+import { useAudio } from "../components/AudioManager";
+
 export default function Game() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { kindOperation, genero, nivel } = state || {};
   const resultado = kindOperation === "Sumas" ? "+" : "-";
+
+  const { playClick, playClickButton } = useAudio();
 
   const [current_streak, setcurrent_streak] = useState(24);
 
@@ -69,7 +73,9 @@ export default function Game() {
       }
     }
   }, [kindOperation, nivel, genero]);
+
   const handlegoback = () => {
+    playClickButton();
     navigate("/Seleccion", {
       state: {
         kindOperation: kindOperation,
@@ -80,6 +86,7 @@ export default function Game() {
   };
 
   const handleResetLevel = async () => {
+    playClickButton();
     const result = await Swal.fire({
       title: `¿Reiniciar ejercicios de ${kindOperation.toUpperCase()} - Nivel ${nivel}?`,
       text: "Se perderá todo el progreso y se generarán 8 nuevos ejercicios completamente diferentes.",
@@ -152,6 +159,7 @@ export default function Game() {
 
   const handlegoExercise = (index) => {
     if (!Bloked[index] && exercises[index]) {
+      playClickButton();
       navigate("/Exercise", {
         state: {
           exercise: exercises[index],
@@ -164,12 +172,6 @@ export default function Game() {
       });
     }
   };
-
-  {
-    /* const { kindOperation, genero } = state || {};*/
-  }
-
-  // 'mujer' o 'hombre'
 
   return (
     <div className="h-screen bg-gradient-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -536,6 +538,7 @@ export default function Game() {
                 <button
                   key={`exercise-${index}`}
                   onClick={() => handlegoExercise(index)}
+                  onMouseEnter={() => !Bloked[index] && playClick()}
                   className={`relative backdrop-blur-sm rounded-4xl w-87 h-75 flex flex-col border-4 border-black/20 px-7 shadow-inner transition-transform mt-3 sm:mt-5 ${marginClass} ${
                     !Bloked[index]
                       ? "transition-all duration-300 hover:scale-110"
@@ -610,12 +613,11 @@ export default function Game() {
       </div>
 
       <div className=" absolute flex items-center  bottom-10 right-20 z-30 ">
-        
-
         {/* Botón regresar */}
         {genero === "mujer" ? (
           <button
             onClick={handlegoback}
+            onMouseEnter={() => playClick()}
             className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
             style={{
               fontFamily: "Kavoon, cursive",
@@ -627,6 +629,7 @@ export default function Game() {
         ) : (
           <button
             onClick={handlegoback}
+            onMouseEnter={() => playClick()}
             className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
             style={{
               fontFamily: "Kavoon, cursive",
@@ -638,10 +641,11 @@ export default function Game() {
         )}
       </div>
       <div className=" absolute flex items-center  bottom-10 left-50 z-30 ">
-      {/* Botón regresar */}
+      {/* Botón reiniciar */}
         {genero === "mujer" ? (
           <button
             onClick={handleResetLevel}
+            onMouseEnter={() => playClick()}
             className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
             style={{
               fontFamily: "Kavoon, cursive",
@@ -653,6 +657,7 @@ export default function Game() {
         ) : (
           <button
             onClick={handleResetLevel}
+            onMouseEnter={() => playClick()}
             className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
             style={{
               fontFamily: "Kavoon, cursive",
@@ -662,7 +667,7 @@ export default function Game() {
             Reiniciar <RotateCcw className="w-10 h-10 " strokeWidth={3} />
           </button>
         )}
-        </div>
+      </div>
     </div>
   );
 }

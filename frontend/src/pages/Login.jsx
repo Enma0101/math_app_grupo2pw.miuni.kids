@@ -13,7 +13,7 @@ import Star from '../assets/Star.png';
 import notebook from '../assets/notebook.png';
 import plus from '../assets/Plus.png';
 import fondo from '../assets/Backgroundinicio 6.svg';
-
+import { useAudio } from '../components/AudioManager';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -21,9 +21,10 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { login, loading } = useAuth();
-
+  const { unlockAudio } = useAudio();
   const handleSubmit = async (e) => {
     e.preventDefault();
+    unlockAudio();   
     if (!username || !password) {
       Swal.fire({ icon: 'warning', title: 'Campos requeridos', text: 'Usuario y contraseña son obligatorios' });
       return;
@@ -34,6 +35,7 @@ export default function Login() {
     } else {
       Swal.fire({ icon: 'error', title: 'No se pudo iniciar sesión', text: res.message || 'Verifica tus credenciales' });
     }
+
   };
   const handleRegisterClick = () => {
     navigate('/register'); 
