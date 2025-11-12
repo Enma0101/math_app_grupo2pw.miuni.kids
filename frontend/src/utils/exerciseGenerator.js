@@ -130,8 +130,9 @@ export const generateUniqueExercises = (operationType, nivel) => {
  * @param {string} genero - "mujer" o "hombre"
  * @param {Array} exercises - Array de ejercicios a guardar
  */
-export const saveExercisesToStorage = (kindOperation, nivel, genero, exercises) => {
-  const storageKey = `exercises_${kindOperation}_${nivel}_${genero}`;
+export const saveExercisesToStorage = (userId, kindOperation, nivel, genero, exercises) => {
+  if(!userId) return;
+  const storageKey = `exercises_${userId}_${kindOperation}_${nivel}_${genero}`;
   localStorage.setItem(storageKey, JSON.stringify(exercises));
 };
 
@@ -142,10 +143,21 @@ export const saveExercisesToStorage = (kindOperation, nivel, genero, exercises) 
  * @param {string} genero - "mujer" o "hombre"
  * @returns {Array|null} - Array de ejercicios o null si no existen
  */
-export const getExercisesFromStorage = (kindOperation, nivel, genero) => {
-  const storageKey = `exercises_${kindOperation}_${nivel}_${genero}`;
-  const stored = localStorage.getItem(storageKey);
-  return stored ? JSON.parse(stored) : null;
+export const getExercisesFromStorage = (userId, kindOperation, nivel, genero) => {
+  if(!userId) return null;
+  const newKey = `exercises_${userId}_${kindOperation}_${nivel}_${genero}`;
+  const storedNew = localStorage.getItem(newKey);
+  if(storedNew) return JSON.parse(storedNew);
+  // Intentar migración desde clave antigua (sin userId) solo una vez
+  const legacyKey = `exercises_${kindOperation}_${nivel}_${genero}`;
+  const legacy = localStorage.getItem(legacyKey);
+  if(legacy){
+    // Migrar y eliminar legacy para evitar que otro usuario la copie
+    localStorage.setItem(newKey, legacy);
+    localStorage.removeItem(legacyKey);
+    return JSON.parse(legacy);
+  }
+  return null;
 };
 
 /**
@@ -156,11 +168,11 @@ export const getExercisesFromStorage = (kindOperation, nivel, genero) => {
  * @param {number} exerciseIndex - Índice del ejercicio a actualizar
  * @param {Object} updatedExercise - Ejercicio actualizado
  */
-export const updateExerciseInStorage = (kindOperation, nivel, genero, exerciseIndex, updatedExercise) => {
-  const exercises = getExercisesFromStorage(kindOperation, nivel, genero);
+export const updateExerciseInStorage = (userId, kindOperation, nivel, genero, exerciseIndex, updatedExercise) => {
+  const exercises = getExercisesFromStorage(userId, kindOperation, nivel, genero);
   if (exercises) {
     exercises[exerciseIndex] = updatedExercise;
-    saveExercisesToStorage(kindOperation, nivel, genero, exercises);
+    saveExercisesToStorage(userId, kindOperation, nivel, genero, exercises);
   }
 };
 
@@ -169,10 +181,11 @@ export const updateExerciseInStorage = (kindOperation, nivel, genero, exerciseIn
  * @param {string} nivel - "Facil", "Medio", o "Dificil"
  * @param {string} kindOperation - "Sumas" o "Restas"
  */
-export const clearExercisesByLevel = (nivel, kindOperation) => {
+export const clearExercisesByLevel = (userId, nivel, kindOperation) => {
+  if(!userId) return;
   Object.keys(localStorage).forEach((key) => {
-    // Verifica que la clave tenga el formato: exercises_[kindOperation]_[nivel]_[genero]
-    if (key.startsWith(`exercises_${kindOperation}_${nivel}_`)) {
+    // Formato nuevo: exercises_{userId}_{kindOperation}_{nivel}_{genero}
+    if (key.startsWith(`exercises_${userId}_${kindOperation}_${nivel}_`)) {
       localStorage.removeItem(key);
     }
   });
@@ -197,3 +210,70 @@ export const generateCompletelyNewExercises = (operationType, nivel, previousExe
   
   return exercises;
 };
+
+// ===================== STREAK (RACHA) UTILITIES =====================
+// Estructura en localStorage por usuario y tipo de operación:
+// Key: streak_{userId}_{operationType}
+// Value: {
+//   total: number,               // racha total acumulada (consecutivos correctos)
+//   levelCounts: { Facil:number, Medio:number, Dificil:number } // aportes por nivel
+// }
+
+const STREAK_LEVELS = ['Facil','Medio','Dificil'];
+
+function buildStreakKey(userId, operationType){
+  return `streak_${userId}_${operationType}`; // operationType: 'Sumas' | 'Restas'
+}
+
+export function getStreak(userId, operationType){
+  if(!userId || !operationType) return { total:0, levelCounts: {Facil:0,Medio:0,Dificil:0} };
+  try {
+    const raw = localStorage.getItem(buildStreakKey(userId, operationType));
+    if(!raw) return { total:0, levelCounts: {Facil:0,Medio:0,Dificil:0} };
+    const parsed = JSON.parse(raw);
+    // asegurar estructura
+    return {
+      total: typeof parsed.total === 'number' ? parsed.total : 0,
+      levelCounts: {
+        Facil: parsed?.levelCounts?.Facil || 0,
+        Medio: parsed?.levelCounts?.Medio || 0,
+        Dificil: parsed?.levelCounts?.Dificil || 0,
+      }
+    };
+  } catch { return { total:0, levelCounts:{Facil:0,Medio:0,Dificil:0} }; }
+}
+
+function saveStreak(userId, operationType, data){
+  if(!userId || !operationType) return;
+  localStorage.setItem(buildStreakKey(userId, operationType), JSON.stringify(data));
+}
+
+// Incrementa racha global y del nivel (solo si se mantiene consecutividad de aciertos)
+export function incrementStreak(userId, operationType, nivel){
+  const streak = getStreak(userId, operationType);
+  // nivel conteo
+  if(!STREAK_LEVELS.includes(nivel)) nivel = 'Facil';
+  streak.levelCounts[nivel] += 1;
+  streak.total += 1;
+  saveStreak(userId, operationType, streak);
+  return streak;
+}
+
+// Reinicia completamente la racha para esa operación (por fallo)
+export function resetStreakOnFailure(userId, operationType){
+  const cleared = { total:0, levelCounts:{Facil:0,Medio:0,Dificil:0} };
+  saveStreak(userId, operationType, cleared);
+  return cleared;
+}
+
+// Reinicia solo la contribución de un nivel (por reinicio de ejercicios del nivel)
+export function resetStreakLevel(userId, operationType, nivel){
+  const streak = getStreak(userId, operationType);
+  if(STREAK_LEVELS.includes(nivel)){
+    const subtract = streak.levelCounts[nivel];
+    streak.total = Math.max(0, streak.total - subtract);
+    streak.levelCounts[nivel] = 0;
+    saveStreak(userId, operationType, streak);
+  }
+  return streak;
+}

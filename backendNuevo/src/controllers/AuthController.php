@@ -35,6 +35,11 @@ class AuthController
             return JR::error($res, 'date_birthday debe tener formato YYYY-MM-DD', 422);
         }
 
+        // Unicidad de username
+        if (\App\Models\User::where('username', $b['username'])->exists()) {
+            return JR::error($res, 'El nombre de usuario ya está en uso', 409);
+        }
+
         // Crear usuario
         try {
             $user = User::create([
@@ -47,6 +52,10 @@ class AuthController
             ]);
             return JR::success($res, ['id_user' => $user->id_user], 201);
         } catch (\Throwable $e) {
+            // Error amigable para duplicados
+            if ($e instanceof \Illuminate\Database\QueryException && isset($e->errorInfo[1]) && (int)$e->errorInfo[1] === 1062) {
+                return JR::error($res, 'El nombre de usuario ya está en uso', 409);
+            }
             return JR::error($res, 'No se pudo registrar: ' . $e->getMessage(), 400);
         }
     }

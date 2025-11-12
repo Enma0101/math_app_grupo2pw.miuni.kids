@@ -19,7 +19,10 @@ import {
   saveExercisesToStorage,
   clearExercisesByLevel,
   generateCompletelyNewExercises,
+  getStreak,
+  resetStreakLevel
 } from "../utils/exerciseGenerator";
+import { useAuth } from "../context/AuthContext";
 
 import { useAudio } from "../components/AudioManager";
 
@@ -30,8 +33,9 @@ export default function Game() {
   const resultado = kindOperation === "Sumas" ? "+" : "-";
 
   const { playClick, playClickButton } = useAudio();
+  const { user } = useAuth();
 
-  const [current_streak, setcurrent_streak] = useState(24);
+  const [current_streak, setcurrent_streak] = useState(0);
 
   const [exercises, setExercises] = useState([]);
 
@@ -47,9 +51,10 @@ export default function Game() {
   });
 
   useEffect(() => {
-    if (kindOperation && nivel) {
+    if (kindOperation && nivel && user?.id_user) {
       // Intentar cargar ejercicios existentes
       const storedExercises = getExercisesFromStorage(
+        user.id_user,
         kindOperation,
         nivel,
         genero
@@ -69,10 +74,15 @@ export default function Game() {
         // Si no existen, generar nuevos
         const newExercises = generateUniqueExercises(kindOperation, nivel);
         setExercises(newExercises);
-        saveExercisesToStorage(kindOperation, nivel, genero, newExercises);
+        saveExercisesToStorage(user.id_user, kindOperation, nivel, genero, newExercises);
+      }
+      // Cargar racha acumulada (total) para el usuario/operación
+      if(user?.id_user && kindOperation){
+        const st = getStreak(user.id_user, kindOperation);
+        setcurrent_streak(st.total);
       }
     }
-  }, [kindOperation, nivel, genero]);
+  }, [kindOperation, nivel, genero, user?.id_user]);
 
   const handlegoback = () => {
     playClickButton();
@@ -93,8 +103,7 @@ export default function Game() {
       icon: "question",
 
       color: "#5c5b5bff",
-      showCancelButton: true,
-      showCancelButton: true,
+  showCancelButton: true,
       confirmButtonColor: "#4CAF50", 
       cancelButtonColor: "#F44336", 
 
@@ -115,7 +124,7 @@ export default function Game() {
       const currentExercises = [...exercises];
 
       // Limpiar ejercicios del nivel y tipo de operación actual
-      clearExercisesByLevel(nivel, kindOperation);
+  clearExercisesByLevel(user.id_user, nivel, kindOperation);
 
       // Generar nuevos ejercicios que NO se parezcan a los anteriores
       const newExercises = generateCompletelyNewExercises(
@@ -125,7 +134,7 @@ export default function Game() {
       );
 
       setExercises(newExercises);
-      saveExercisesToStorage(kindOperation, nivel, genero, newExercises);
+  saveExercisesToStorage(user.id_user, kindOperation, nivel, genero, newExercises);
 
       // Resetear todos los bloqueados
       setBloked({
@@ -138,6 +147,12 @@ export default function Game() {
         6: false,
         7: false,
       });
+
+      // Ajustar racha: restar la contribución de este nivel
+      if(user?.id_user && kindOperation){
+        const st = resetStreakLevel(user.id_user, kindOperation, nivel);
+        setcurrent_streak(st.total);
+      }
 
       // Mostrar confirmación
       Swal.fire({
@@ -174,7 +189,7 @@ export default function Game() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+  <div className="h-screen bg-linear-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {/* Imagen de fondo */}
 
       {genero === "mujer" ? (
@@ -312,7 +327,7 @@ export default function Game() {
                         color: "#ffff",
                       }}
                     >
-                      Nivel: {nivel}
+                    ¡Vamos a Sumar!
                     </span>
                   </h1>
                 ) : (
@@ -323,7 +338,7 @@ export default function Game() {
                       color: "#852526",
                     }}
                   >
-                    ¡Vamos a Restar!{" "}
+                  ¡Vamos a Restar!{" "}
                     <span
                       style={{
                         display: "block",
@@ -332,7 +347,7 @@ export default function Game() {
                         color: "#ffff",
                       }}
                     >
-                      Nivel: {nivel}
+                    ¡Vamos a Restar!
                     </span>
                   </h1>
                 )
@@ -353,7 +368,7 @@ export default function Game() {
                       color: "#262A51",
                     }}
                   >
-                    Nivel: {nivel}
+                    ¡Vamos a Sumar!
                   </span>
                 </h1>
               ) : (
@@ -373,7 +388,7 @@ export default function Game() {
                       color: "#262A51",
                     }}
                   >
-                    Nivel: {nivel}
+                    ¡Vamos a Restar!
                   </span>
                 </h1>
               )}
@@ -618,7 +633,7 @@ export default function Game() {
           <button
             onClick={handlegoback}
             onMouseEnter={() => playClick()}
-            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
+            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-transform duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg mr-15"
             style={{
               fontFamily: "Kavoon, cursive",
               color: "#ffffff",
@@ -630,7 +645,7 @@ export default function Game() {
           <button
             onClick={handlegoback}
             onMouseEnter={() => playClick()}
-            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
+            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-transform duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg mr-15"
             style={{
               fontFamily: "Kavoon, cursive",
               color: "#FFB212",
@@ -646,7 +661,7 @@ export default function Game() {
           <button
             onClick={handleResetLevel}
             onMouseEnter={() => playClick()}
-            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
+            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-transform duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg mr-15"
             style={{
               fontFamily: "Kavoon, cursive",
               color: "#ffffff",
@@ -658,7 +673,7 @@ export default function Game() {
           <button
             onClick={handleResetLevel}
             onMouseEnter={() => playClick()}
-            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
+            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-transform duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg mr-15"
             style={{
               fontFamily: "Kavoon, cursive",
               color: "#FFB212",

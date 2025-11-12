@@ -55,6 +55,18 @@ $errorMiddleware->setDefaultErrorHandler(function(
 });
 $app->addBodyParsingMiddleware();
 
+// Manejar OPTIONS globalmente (por si el router no captura)
+$app->add(function ($req, $handler) {
+	if ($req->getMethod() === 'OPTIONS') {
+		$res = new \Nyholm\Psr7\Response();
+		return $res
+			->withHeader('Access-Control-Allow-Origin', $_ENV['CORS_ORIGIN'] ?? '*')
+			->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept')
+			->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+	}
+	return $handler->handle($req);
+});
+
 // CORS
 $app->add(new App\Middlewares\CorsMiddleware($_ENV['CORS_ORIGIN'] ?? '*'));
 
