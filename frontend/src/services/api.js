@@ -51,6 +51,8 @@ export const apiGetLevels = () => request('/levels');
 // EXERCISES
 export const apiGenerateExercises = (type, levelId) => request(`/exercises/${type}/${levelId}`);
 export const apiSaveAnswer = (token, payload) => request('/exercises/answer', { method: 'POST', token, body: payload });
+export const apiSelectExercise = (token, payload) => request('/exercises/select', { method: 'POST', token, body: payload });
+export const apiAttemptExercise = (token, payload) => request('/exercises/attempt', { method: 'POST', token, body: payload });
 
 // PROGRESS
 export const apiGetProgress = (userId, token) => request(`/progress/${userId}`, { token });

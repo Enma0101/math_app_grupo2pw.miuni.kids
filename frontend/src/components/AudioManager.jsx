@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect, useRef, createContext, useContext } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 
@@ -156,23 +157,11 @@ const playClickButton = () => {
 
 // Componente de control visual (volumen, mute)
 export const AudioControl = ({ genero }) => {
-  const { isMuted, volume, toggleMute, changeVolume, togglePlay, isPlaying } = useAudio();
+  const { isMuted, volume, toggleMute, changeVolume } = useAudio();
   const [showSlider, setShowSlider] = useState(false);
 
   return (
     <div className="absolute top-5 right-30 h-20 w-20 z-50 flex items-center gap-4">
-      <button
-        onClick={togglePlay}
-        className="flex items-center gap-2 bg-transparent border-none cursor-pointer p-2 hover:scale-110 transition-transform"
-        style={{ 
-          fontFamily: 'Kavoon, cursive', 
-          color: genero === 'mujer' ? '#FFF' : '#FFB212',
-          fontSize: '2rem'
-        }}
-      >
-        {isPlaying ? '' : '▶️'}
-      </button>
-
       <button
         onClick={toggleMute}
         onMouseEnter={() => setShowSlider(true)}

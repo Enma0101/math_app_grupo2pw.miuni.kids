@@ -17,9 +17,13 @@ import StarP from "../assets/StarPink.png";
 import StarG from "../assets/StarGreen.png";
 
 import { useAudio, AudioControl } from "../components/AudioManager";
+import { useAuth } from "../context/AuthContext";
+import { apiSelectExercise } from "../services/api";
 
 export default function Seleccion() {
    const { playClick,playClickButton ,playAudio } = useAudio();
+ // Auth
+  const { token, user } = useAuth();
  // Estado para almacenar el género seleccionado
  
   const [userName, setUserName] = useState("Enmanuel");
@@ -28,11 +32,27 @@ export default function Seleccion() {
   const navigate = useNavigate();
   const { kindOperation, genero } = state || {};
 
-
-  const handleActivity = (nivel) => {
-    navigate("/Game", {
-      state: { kindOperation: kindOperation, genero: genero, nivel: nivel },
-    });
+  const handleActivity = async (nivel) => {
+    // Mapear nivel a id
+    const levelMap = { "Facil": 1, "Medio": 2, "Dificil": 3 };
+    const levelId = levelMap[nivel] || 1;
+    // Enviar selección al backend (no bloqueante para la UX)
+    try {
+      if (token && user?.id_user && kindOperation) {
+        await apiSelectExercise(token, {
+          user_id: user.id_user,
+          level_id: levelId,
+          operation_type: kindOperation
+        });
+      }
+    } catch (e) {
+      // No alterar la lógica/flujo de front; seguimos navegando igual
+      console.warn('No se pudo registrar la selección:', e?.message);
+    } finally {
+      navigate("/Game", {
+        state: { kindOperation: kindOperation, genero: genero, nivel: nivel },
+      });
+    }
   };
 
   // 'mujer' o 'hombre'

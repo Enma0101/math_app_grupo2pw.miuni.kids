@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { LogOut } from "lucide-react";
 
 // Importa tus imágenes
@@ -68,30 +69,39 @@ const TypewriterText = ({
 
 export default function Home() {
   const { playClick,playClickButton ,playAudio } = useAudio();
-
-  const [genero, setGenero] = useState("hombre");
-  const [userName, setUserName] = useState("Christopher");
-  const [TotalStar, setTotalStar] = useState(100);
+  const { user, refreshUser, logout } = useAuth();
   const navigate = useNavigate();
-  const [kindOperation, setkindOperation] = useState("Sumas");
+
+  // Estado derivado del usuario autenticado
+  const [genero, setGenero] = useState(user?.gender || "hombre");
+  const [userName, setUserName] = useState(user?.full_name || user?.username || "");
+  const [TotalStar] = useState(0); // TODO: conectar con progreso real
+  // Navegación usa el valor pasado; no se conserva en estado local
 
   const [typewriterStarted, setTypewriterStarted] = useState(false);
 
-  const handleActivity = (kindOperation) => {
-    setkindOperation(kindOperation);
+  const handleActivity = (kindOperationValue) => {
     navigate("/Seleccion", {
-      state: { kindOperation: kindOperation, genero: genero },
+      state: { kindOperation: kindOperationValue, genero },
     });
   };
 
-  // Reproducir audio de fondo automáticamente cuando carga el componente
+  // Reproducir audio y refrescar datos del usuario (por si cambió algo en backend)
   useEffect(() => {
     const timer = setTimeout(() => {
       playAudio();
+      refreshUser();
     }, 500);
-
     return () => clearTimeout(timer);
-  }, [playAudio]);
+  }, [playAudio, refreshUser]);
+
+  // Sincronizar cuando user cambie (login / refresh)
+  useEffect(() => {
+    if (user) {
+      setGenero(user.gender || "hombre");
+      setUserName(user.full_name || user.username);
+    }
+  }, [user]);
 
   const handleTypewriterStart = () => {
     if (!typewriterStarted) {
@@ -99,8 +109,13 @@ export default function Home() {
     }
   };
 
+  const tomarPrimeraPalabra = (nombre) => {
+    return nombre.trim().split(/\s+/)[0];
+  };
+  const primerNombre = tomarPrimeraPalabra(userName);
+
   return (
-    <div className="h-screen bg-gradient-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+  <div className="h-screen bg-linear-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
       <AudioControl genero={genero} />
 
       {genero === "mujer" ? (
@@ -262,7 +277,8 @@ export default function Home() {
               }}
             >
               <TypewriterText
-                text={`¡Bienvenido! "${userName}"`}
+                key={primerNombre}
+                text={`¡Bienvenido, ${primerNombre}!`}
                 speed={50}
                 onStart={() => {
                   handleTypewriterStart();
@@ -278,7 +294,7 @@ export default function Home() {
               }}
             >
               <TypewriterText
-                text="me encantaría saber que "
+                text="¿Qué realizaremos hoy?"
                 speed={40}
                 delay={1800}
               />
@@ -304,7 +320,8 @@ export default function Home() {
               }}
             >
               <TypewriterText
-                text={`¡Bienvenido! "${userName}"`}
+                key={primerNombre}
+                text={`¡Bienvenido! "${primerNombre}"`}
                 speed={50}
                 onStart={() => {
                   handleTypewriterStart();
@@ -430,7 +447,7 @@ export default function Home() {
             playClickButton();
             handleActivity("Sumas");
           }}
-          className={` group relative rounded-3xl p-10 bottom-80 w-150 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5 ${
+          className={` group relative rounded-3xl p-10 bottom-80 w-150 shadow-lg hover:shadow-2xl transition-transform duration-300 hover:scale-105 mt-3 sm:mt-5 ${
             genero === "mujer"
               ? "bg-ground-custom2girl bg-custom-gradient-girl2"
               : "bg-ground-custom2 bg-custom-gradient"
@@ -438,7 +455,7 @@ export default function Home() {
           onMouseEnter={() => playClick()}
         >
           <div className="flex items-center gap-15">
-            <div className="w-35 h-35 rounded-full flex-shrink-0 group-hover:rotate-12 transition-transform">
+            <div className="w-35 h-35 rounded-full shrink-0 group-hover:rotate-12 transition-transform">
               {genero === "mujer" ? (
                 <img
                   src={Plusgirl}
@@ -512,7 +529,7 @@ export default function Home() {
             playClickButton();
             handleActivity("Restas");
           }}
-          className={`group relative rounded-3xl p-10 bottom-80 w-150 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5 ${
+          className={`group relative rounded-3xl p-10 bottom-80 w-150 shadow-lg hover:shadow-2xl transition-transform duration-300 hover:scale-105 mt-3 sm:mt-5 ${
             genero === "mujer"
               ? "bg-ground-custom2girl bg-custom-gradient-girl2"
               : "bg-ground-custom2 bg-custom-gradient"
@@ -520,7 +537,7 @@ export default function Home() {
           onMouseEnter={() => playClick()}
         >
           <div className="flex items-center gap-15">
-            <div className="w-35 h-35 rounded-full flex-shrink-0 group-hover:-rotate-12 transition-transform">
+            <div className="w-35 h-35 rounded-full shrink-0 group-hover:-rotate-12 transition-transform">
               {genero === "mujer" ? (
                 <img
                   src={resgirl}
@@ -593,8 +610,8 @@ export default function Home() {
       <div className="absolute bottom-10 left-10">
         {genero === "mujer" ? (
           <button
-            onClick={() => {}}
-            className="text-6xl flex items-center gap-2 bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
+            onClick={() => { logout(); navigate('/login'); }}
+            className="text-6xl flex items-center gap-2 bg-transparent border-none cursor-pointer p-0 transition-transform duration-300 hover:scale-105 mt-3 sm:mt-5"
             style={{
               fontFamily: "Kavoon, cursive",
               color: "#5F005C",
@@ -606,8 +623,8 @@ export default function Home() {
           </button>
         ) : (
           <button
-            onClick={() => {}}
-            className="text-6xl flex items-center gap-2 bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
+            onClick={() => { logout(); navigate('/login'); }}
+            className="text-6xl flex items-center gap-2 bg-transparent border-none cursor-pointer p-0 transition-transform duration-300 hover:scale-105 mt-3 sm:mt-5"
             style={{
               fontFamily: "Kavoon, cursive",
               color: "#262A51",

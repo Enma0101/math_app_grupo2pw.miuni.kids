@@ -44,9 +44,14 @@ export function AuthProvider({ children }) {
 	const register = async (payload) => {
 		setLoading(true);
 		try {
+			// 1) Crear usuario
 			await apiRegister(payload);
-			// Auto-login
-			return await login(payload.username, payload.password);
+			// 2) Intentar auto-login (pero no marcar como fallo de registro si el login falla)
+			const loginRes = await login(payload.username, payload.password);
+			if (loginRes.ok) {
+				return { ok: true, registered: true, loginOk: true };
+			}
+			return { ok: true, registered: true, loginOk: false, message: loginRes.message };
 		} catch (e) {
 			return { ok: false, message: e.message };
 		} finally { setLoading(false); }

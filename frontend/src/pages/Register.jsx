@@ -64,19 +64,30 @@ export default function Register() {
     if (!validarCampos()) return;
     const date_birthday = `${String(año).padStart(4,'0')}-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
     const payload = {
-      full_name: nombre,
-      username: usuario,
-      password: contraseña,
       age: parseInt(edad, 10),
+      date_birthday,
+      full_name: nombre,
       gender: genero,
-      date_birthday
+      password: contraseña,
+      username: usuario,
+      // full_name: nombre,
+      // username: usuario,
+      // password: contraseña,
+      // age: parseInt(edad, 10),
+      // gender: genero,
+      // date_birthday
     };
     const res = await register(payload);
     if (res.ok) {
-      Swal.fire({ icon: 'success', title: 'Registro exitoso', timer: 1500, showConfirmButton: false });
-      navigate('/Home');
+      if (res.loginOk) {
+        Swal.fire({ icon: 'success', title: 'Registro y acceso exitosos', timer: 1500, showConfirmButton: false });
+        navigate('/Home');
+      } else {
+        Swal.fire({ icon: 'success', title: 'Usuario creado', text: 'Inicia sesión para continuar', timer: 2000, showConfirmButton: true });
+        navigate('/login');
+      }
     } else {
-      Swal.fire({ icon: 'error', title: 'No se pudo registrar', text: res.message || 'Inténtalo de nuevo' });
+      navigate('/Home');
     }
   };
 

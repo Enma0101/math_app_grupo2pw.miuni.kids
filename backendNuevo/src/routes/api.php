@@ -38,6 +38,8 @@ $app->get('/levels',           [LevelController::class, 'index']);
 // EXERCISES
 $app->get('/exercises/{type}/{levelId}', [ExerciseController::class, 'generate']); // 8 ejercicios
 $app->post('/exercises/answer',          [ExerciseController::class, 'saveAnswer'])->add(new AuthMiddleware());
+$app->post('/exercises/select',          [ExerciseController::class, 'storeSelection'])->add(new AuthMiddleware()); // registra solo la selección de nivel/operación
+$app->post('/exercises/attempt',         [ExerciseController::class, 'storeAttempt'])->add(new AuthMiddleware()); // almacena un intento (correcto/incorrecto) sin validación
 
 // PROGRESS
 $app->get('/progress/{userId}',  [ProgressController::class, 'show'])->add(new AuthMiddleware());

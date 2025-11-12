@@ -17,8 +17,10 @@ import Cross from "../assets/Cross Mark.png";
 import StarR from "../assets/starR.png";
 import Cat from "../assets/catawesome.gif";
 import Catsad from "../assets/catsad.gif";
-import { updateExerciseInStorage } from "../utils/exerciseGenerator";
+import { updateExerciseInStorage, getStreak, incrementStreak, resetStreakOnFailure } from "../utils/exerciseGenerator";
 import { useAudio } from "../components/AudioManager";
+import { useAuth } from "../context/AuthContext";
+import { apiAttemptExercise } from "../services/api";
 
 export default function Exercise({ onExit }) {
   const { state } = useLocation();
@@ -26,17 +28,13 @@ export default function Exercise({ onExit }) {
 
   // ✅ IMPORTAR FUNCIONES DE AUDIO
   const { playClick, playClickButton, playCorrect, playCorrect2, playincorrect, pauseAudio , addnumber,playAudio } = useAudio();
+  const { token, user } = useAuth();
 
-  // ✅ PAUSAR MÚSICA DE FONDO AL ENTRAR
+  // ✅ PAUSAR MÚSICA DE FONDO AL ENTRAR (solo audio)
   useEffect(() => {
-    // Pausa música de fondo al entrar al módulo
     pauseAudio();
-
-    // Reanuda la música al salir
-    return () => {
-      playAudio();
-    };
-  }, []);
+    return () => { playAudio(); };
+  }, [pauseAudio, playAudio]);
 
   // ✅ RECIBIR DATOS DESDE GAME
   const {
@@ -48,10 +46,17 @@ export default function Exercise({ onExit }) {
     allExercises,
   } = state || {};
 
+  // ✅ Cargar racha persistida por usuario/operación
+  useEffect(() => {
+    if (user?.id_user && kindOperation) {
+      const st = getStreak(user.id_user, kindOperation);
+      setcurrent_streak(st?.total || 0);
+    }
+  }, [user?.id_user, kindOperation]);
+
   // Estados básicos
-  const [userName, setUserName] = useState("Enmanuel");
-  const [TotalStar, setTotalStar] = useState(100);
-  const [current_streak, setcurrent_streak] = useState(5);
+  // Eliminados estados no utilizados: userName, TotalStar
+  const [current_streak, setcurrent_streak] = useState(0);
   const [Star_for_level] = useState(3);
 
   // ✅ USAR LOS DATOS DEL EJERCICIO RECIBIDO
@@ -83,9 +88,7 @@ export default function Exercise({ onExit }) {
     }
   }, [exercise]);
 
-  const isCarryEnabled = (index) => {
-    return true;
-  };
+  const isCarryEnabled = () => true;
 
   // Verificar si un cuadro de respuesta está habilitado
   const isAnswerEnabled = (index) => {
@@ -116,7 +119,7 @@ export default function Exercise({ onExit }) {
   };
 
   // ✅ FUNCIÓN PARA VERIFICAR LA RESPUESTA
-  const handleVerify = () => {
+  const handleVerify = async () => {
     // Contar dígitos llenados desde la derecha
     let filledCount = 0;
     for (let i = 4; i >= 0; i--) {
@@ -140,12 +143,12 @@ export default function Exercise({ onExit }) {
         // ✅ REPRODUCIR SONIDO DE CORRECTO
         playCorrect();
         
-        // ✅ AUMENTAR RACHA Y REPRODUCIR SONIDO ESPECIAL
-        setcurrent_streak(prev => {
-          const newStreak = prev + 1;
-          playCorrect2(); // Sonido cuando aumenta la racha
-          return newStreak;
-        });
+        // ✅ AUMENTAR RACHA PERSISTENTE Y REPRODUCIR SONIDO ESPECIAL
+        if (user?.id_user && kindOperation) {
+          const st = incrementStreak(user.id_user, kindOperation, nivel);
+          setcurrent_streak(st.total);
+          playCorrect2();
+        }
 
         // ✅ ACTUALIZAR EL EJERCICIO EN STORAGE
         const updatedExercise = {
@@ -155,18 +158,67 @@ export default function Exercise({ onExit }) {
           solved_at: new Date().toISOString(),
         };
 
-        updateExerciseInStorage(
-          kindOperation,
-          nivel,
-          genero,
-          exerciseIndex,
-          updatedExercise
-        );
+        if(user?.id_user){
+          updateExerciseInStorage(
+            user.id_user,
+            kindOperation,
+            nivel,
+            genero,
+            exerciseIndex,
+            updatedExercise
+          );
+        }
+
+        // Enviar intento correcto al backend (no altera la lógica del front)
+        try {
+          if (token && user?.id_user) {
+            const levelMap = { "Facil": 1, "Medio": 2, "Dificil": 3 };
+            await apiAttemptExercise(token, {
+              user_id: user.id_user,
+              level_id: levelMap[nivel] || 1,
+              operation_type: kindOperation,
+              number1: exercise.number1,
+              number2: exercise.number2,
+              correct_result: exercise.correct_result,
+              user_answer: parseInt(userAnswerString),
+              is_correct: true,
+              is_blocked: false,
+              solved_at: new Date().toISOString()
+            });
+          }
+        } catch(e) {
+          console.warn('Falló registro de intento correcto:', e?.message);
+        }
       } else {
         setValidationResult("incorrect");
         
         // ✅ REPRODUCIR SONIDO DE INCORRECTO
         playincorrect();
+        // Reiniciar racha completa por fallo
+        if (user?.id_user && kindOperation) {
+          const st = resetStreakOnFailure(user.id_user, kindOperation);
+          setcurrent_streak(st.total);
+        }
+        // Enviar intento incorrecto (is_blocked true) al backend
+        try {
+          if (token && user?.id_user) {
+            const levelMap = { "Facil": 1, "Medio": 2, "Dificil": 3 };
+            await apiAttemptExercise(token, {
+              user_id: user.id_user,
+              level_id: levelMap[nivel] || 1,
+              operation_type: kindOperation,
+              number1: exercise.number1,
+              number2: exercise.number2,
+              correct_result: exercise.correct_result,
+              user_answer: userAnswerString ? parseInt(userAnswerString) : null,
+              is_correct: false,
+              is_blocked: true,
+              solved_at: new Date().toISOString()
+            });
+          }
+        } catch(e) {
+          console.warn('Falló registro de intento incorrecto:', e?.message);
+        }
       }
     } else {
       if (!userAnswerString) {
@@ -195,7 +247,6 @@ export default function Exercise({ onExit }) {
             background: "bg-ground-custom-girl",
             color: "#5d4037",
             customClass: {
-              popup: "rounded-xl font-kavoon shadow-lg",
               popup: "mi-alerta-popup",
               title: "mi-alerta-titulo",
 
@@ -285,17 +336,17 @@ export default function Exercise({ onExit }) {
   // ✅ FUNCIÓN PARA REGRESAR A GAME
   const handleGoBack = () => {
     playClickButton();
-    navigate("/Game", {
-      state: {
-        kindOperation: kindOperation,
-        genero: genero,
-        nivel: nivel,
-      },
-    });
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/Game", {
+        state: { kindOperation, genero, nivel },
+      });
+    }
   };
 
   return (
-    <div className="h-screen bg-gradient-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+  <div className="h-screen bg-linear-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {genero === "mujer" ? (
         <img
           src={Backgroundgirl}
@@ -419,15 +470,6 @@ export default function Exercise({ onExit }) {
                     }}
                   >
                     ¡Vamos a Sumar!{" "}
-                    <span
-                      style={{
-                        display: "block",
-                        marginTop: "25px",
-                        color: "#ffff",
-                      }}
-                    >
-                      Ejercicio {exerciseIndex + 1}/8
-                    </span>
                   </h1>
                 ) : (
                   <h1
@@ -438,15 +480,6 @@ export default function Exercise({ onExit }) {
                     }}
                   >
                     ¡Vamos a Restar!{" "}
-                    <span
-                      style={{
-                        display: "block",
-                        marginTop: "25px",
-                        color: "#ffff",
-                      }}
-                    >
-                      Ejercicio {exerciseIndex + 1}/8
-                    </span>
                   </h1>
                 )
               ) : kindOperation === "Sumas" ? (
@@ -458,15 +491,6 @@ export default function Exercise({ onExit }) {
                   }}
                 >
                   ¡Vamos a Sumar!{" "}
-                  <span
-                    style={{
-                      display: "block",
-                      marginTop: "25px",
-                      color: "#262A51",
-                    }}
-                  >
-                    Ejercicio {exerciseIndex + 1}/8
-                  </span>
                 </h1>
               ) : (
                 <h1
@@ -477,15 +501,6 @@ export default function Exercise({ onExit }) {
                   }}
                 >
                   ¡Vamos a Restar!{" "}
-                  <span
-                    style={{
-                      display: "block",
-                      marginTop: "25px",
-                      color: "#262A51",
-                    }}
-                  >
-                    Ejercicio {exerciseIndex + 1}/8
-                  </span>
                 </h1>
               )}
             </div>
@@ -545,7 +560,7 @@ export default function Exercise({ onExit }) {
           draggable={false}
         />
 
-        <div className="grid grid-cols-4 grid-rows-4 gap-4 z-50 w-full h-full p-10 flex items-center justify-center">
+  <div className="grid grid-cols-4 grid-rows-4 gap-4 z-50 w-full h-full p-10">
           <div
             className="absolute top-25 bottom-5 left-80 right-80 rounded-4xl -translate-y-10 border-4 border-black/10 shadow-xl flex"
             style={
@@ -566,7 +581,7 @@ export default function Exercise({ onExit }) {
                   <button
                     key={`carry-${index}`}
                     onClick={() =>{ handleCarryClick(index),addnumber()}}
-                    className="w-12 h-12  flex justify-center items-center border-1 border-black/10 rounded-2xl font-semibold text-4xl transition-all shadow-md 
+                    className="w-12 h-12  flex justify-center items-center border border-black/10 rounded-2xl font-semibold text-4xl transition-transform shadow-md 
                       text-white text-center hover:scale-110 cursor-pointer"
                     style={{
                       background: "#21b94aff",
@@ -642,7 +657,7 @@ export default function Exercise({ onExit }) {
                     disabled={
                       !isAnswerEnabled(index) || validationResult === "correct"
                     }
-                    className={`w-30 h-35 border-1 rounded-3xl font-semibold text-9xl  transition-all shadow-lg flex items-center justify-center  ${
+                    className={`w-30 h-35 border rounded-3xl font-semibold text-9xl  transition-transform shadow-lg flex items-center justify-center  ${
                       isAnswerEnabled(index) && validationResult !== "correct"
                         ? " bg-ground-custom-selector  border-black/10 border-2 text-white hover:scale-105 cursor-pointer"
                         : "bg-gray-200 border-gray-400 text-gray-400 cursor-not-allowed opacity-50"
@@ -744,7 +759,7 @@ export default function Exercise({ onExit }) {
                 handleReset();
               }}
               onMouseEnter={() => playClick()}
-              className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
+                className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-transform duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg"
               style={{
                 fontFamily: "Kavoon, cursive",
                 color: "#ffffff",
@@ -760,7 +775,7 @@ export default function Exercise({ onExit }) {
                 handleReset();
               }}
               onMouseEnter={() => playClick()}
-              className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
+              className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 mt-3 sm:mt-5"
               style={{
                 fontFamily: "Kavoon, cursive",
                 color: "#FFB212",
@@ -777,7 +792,7 @@ export default function Exercise({ onExit }) {
             <button
               onClick={handleVerify}
               onMouseEnter={() => playClick()}
-              className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
+              className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg"
               style={{
                 fontFamily: "Kavoon, cursive",
                 color: "#ffffff",
@@ -789,7 +804,7 @@ export default function Exercise({ onExit }) {
             <button
               onClick={handleVerify}
               onMouseEnter={() => playClick()}
-              className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
+              className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 mt-3 sm:mt-5"
               style={{
                 fontFamily: "Kavoon, cursive",
                 color: "#FFB212",
@@ -807,7 +822,7 @@ export default function Exercise({ onExit }) {
           <button
             onClick={() => {handleGoBack(),playAudio()}}
             onMouseEnter={() => playClick()}
-            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
+            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg"
             style={{
               fontFamily: "Kavoon, cursive",
               color: "#ffffff",
@@ -819,7 +834,7 @@ export default function Exercise({ onExit }) {
           <button
             onClick={() => {handleGoBack(),playAudio()}}
             onMouseEnter={() => {playClick()}}
-            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
+            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 mt-3 sm:mt-5"
             style={{
               fontFamily: "Kavoon, cursive",
               color: "#FFB212",
@@ -831,7 +846,7 @@ export default function Exercise({ onExit }) {
       </div>
 
       {/* Botón Reiniciar */}
-      <div className=" absolute  top-58 right-105 z-30 ">
+  <div className=" absolute  top-58 right-105 z-30 ">
         {genero === "mujer" ? (
           <button
             onClick={() => {
@@ -839,7 +854,7 @@ export default function Exercise({ onExit }) {
               handleReset();
             }}
             onMouseEnter={() => playClick()}
-            className=" text-4xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
+              className=" text-4xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-transform duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg"
             style={{
               fontFamily: "Kavoon, cursive",
               color: "#ffffff",
