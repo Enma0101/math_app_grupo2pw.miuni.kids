@@ -337,17 +337,10 @@ export default function Home() {
               }}
             >
               <TypewriterText
-                text="me encantaría saber que "
+                text="¿Qué realizaremos hoy? "
                 speed={40}
                 delay={1800}
               />
-              <span style={{ display: "block" }}>
-                <TypewriterText
-                  text="realizaremos hoy?"
-                  speed={40}
-                  delay={2700}
-                />
-              </span>
             </p>
           </div>
         </div>
