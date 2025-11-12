@@ -327,7 +327,7 @@ export default function Game() {
                         color: "#ffff",
                       }}
                     >
-                      Nivel: {nivel} | Racha: {current_streak}
+                    ¡Vamos a Sumar!
                     </span>
                   </h1>
                 ) : (
@@ -338,7 +338,7 @@ export default function Game() {
                       color: "#852526",
                     }}
                   >
-                    ¡Vamos a Restar!{" "}
+                  ¡Vamos a Restar!{" "}
                     <span
                       style={{
                         display: "block",
@@ -347,7 +347,7 @@ export default function Game() {
                         color: "#ffff",
                       }}
                     >
-                      Nivel: {nivel} | Racha: {current_streak}
+                    ¡Vamos a Restar!
                     </span>
                   </h1>
                 )
@@ -368,7 +368,7 @@ export default function Game() {
                       color: "#262A51",
                     }}
                   >
-                    Nivel: {nivel} | Racha: {current_streak}
+                    ¡Vamos a Sumar!
                   </span>
                 </h1>
               ) : (
@@ -388,7 +388,7 @@ export default function Game() {
                       color: "#262A51",
                     }}
                   >
-                    Nivel: {nivel} | Racha: {current_streak}
+                    ¡Vamos a Restar!
                   </span>
                 </h1>
               )}
