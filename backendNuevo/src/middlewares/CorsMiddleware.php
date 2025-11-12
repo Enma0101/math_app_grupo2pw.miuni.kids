@@ -11,7 +11,7 @@ class CorsMiddleware {
     $res = $handler->handle($req);
     return $res
       ->withHeader('Access-Control-Allow-Origin', $this->origin)
-      ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+      ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept')
       ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   }
 }

@@ -90,4 +90,58 @@ class ExerciseController
             'exercise' => $record
         ], 201);
     }
+
+    // POST /exercises/select
+    // Registra SOLO la selección de nivel y tipo de operación.
+    // Requisito: el backend almacena sin validar (confía en el front).
+    public function storeSelection(Request $req, Response $res)
+    {
+        $b = $req->getParsedBody() ?: [];
+
+        // Sin validaciones rígidas: tomar lo que venga del front
+        // Campos mínimos esperados: user_id, level_id, operation_type
+        $record = UserExercise::create([
+            'user_id' => isset($b['user_id']) ? (int)$b['user_id'] : null,
+            'level_id' => isset($b['level_id']) ? (int)$b['level_id'] : null,
+            'operation_type' => $b['operation_type'] ?? null,
+            // Placeholders para columnas NOT NULL del esquema
+            'number1' => 0,
+            'number2' => 0,
+            'correct_result' => 0,
+            'user_answer' => null,
+            'is_correct' => false,
+            'solved_at' => null,
+            'is_blocked' => false,
+        ]);
+
+        return JR::success($res, [
+            'saved' => true,
+            'selection' => $record
+        ], 201);
+    }
+
+    // POST /exercises/attempt
+    // Almacena un intento (correcto/incorrecto) tal cual lo envía el frontend, sin validaciones.
+    public function storeAttempt(Request $req, Response $res)
+    {
+        $b = $req->getParsedBody() ?: [];
+
+        $record = UserExercise::create([
+            'user_id'        => isset($b['user_id']) ? (int)$b['user_id'] : null,
+            'level_id'       => isset($b['level_id']) ? (int)$b['level_id'] : null,
+            'operation_type' => $b['operation_type'] ?? null,
+            'number1'        => isset($b['number1']) ? (int)$b['number1'] : 0,
+            'number2'        => isset($b['number2']) ? (int)$b['number2'] : 0,
+            'correct_result' => isset($b['correct_result']) ? (int)$b['correct_result'] : 0,
+            'user_answer'    => isset($b['user_answer']) && $b['user_answer'] !== '' ? (int)$b['user_answer'] : null,
+            'is_correct'     => (bool)($b['is_correct'] ?? false),
+            'is_blocked'     => isset($b['is_blocked']) ? (bool)$b['is_blocked'] : false,
+            'solved_at'      => $b['solved_at'] ?? date('Y-m-d H:i:s'),
+        ]);
+
+        return JR::success($res, [
+            'saved' => true,
+            'attempt' => $record
+        ], 201);
+    }
 }

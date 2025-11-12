@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import Swal from 'sweetalert2';
 // Importa tus imágenes
 import Background from '../assets/BackgroundLogin.svg';
 import Numbers102 from '../assets/numeros102 4.png';
@@ -26,6 +28,7 @@ export default function Register() {
   const [errorAño, setErrorAño] = useState("");
   const [errores, setErrores] = useState({});
   const navigate = useNavigate();
+  const { register, loading } = useAuth();
   const currentYear = new Date().getFullYear();
 
   // Función para validar todos los campos
@@ -56,21 +59,35 @@ export default function Register() {
     return Object.keys(nuevosErrores).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validar todos los campos
-    if (validarCampos()) {
-      // Si no hay errores, proceder con el envío del formulario
-      console.log("Formulario válido, enviando datos...");
-      console.log({
-        nombre,
-        usuario,
-        fechaNacimiento: `${dia}/${mes}/${año}`,
-        edad,
-        genero,
-        contraseña
-      });
+    if (!validarCampos()) return;
+    const date_birthday = `${String(año).padStart(4,'0')}-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+    const payload = {
+      age: parseInt(edad, 10),
+      date_birthday,
+      full_name: nombre,
+      gender: genero,
+      password: contraseña,
+      username: usuario,
+      // full_name: nombre,
+      // username: usuario,
+      // password: contraseña,
+      // age: parseInt(edad, 10),
+      // gender: genero,
+      // date_birthday
+    };
+    const res = await register(payload);
+    if (res.ok) {
+      if (res.loginOk) {
+        Swal.fire({ icon: 'success', title: 'Registro y acceso exitosos', timer: 1500, showConfirmButton: false });
+        navigate('/Home');
+      } else {
+        Swal.fire({ icon: 'success', title: 'Usuario creado', text: 'Inicia sesión para continuar', timer: 2000, showConfirmButton: true });
+        navigate('/login');
+      }
+    } else {
+      navigate('/Home');
     }
   };
 
@@ -705,10 +722,11 @@ export default function Register() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-green-800 font-black text-base sm:text-lg py-2 sm:py-3 rounded-xl border-3 sm:border-4 border-yellow-600 shadow-lg transform hover:scale-105 transition-transform"
+                  disabled={loading}
+                  className="flex-1 bg-yellow-400 hover:bg-yellow-500 disabled:opacity-60 text-green-800 font-black text-base sm:text-lg py-2 sm:py-3 rounded-xl border-3 sm:border-4 border-yellow-600 shadow-lg transform hover:scale-105 transition-transform"
                   style={{ fontFamily: 'Kavoon, cursive' }}
                 >
-                  Crear
+                  {loading ? 'Creando...' : 'Crear'}
                 </button>
               </div>
             </form>
