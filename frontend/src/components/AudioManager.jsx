@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import { useState, useEffect, useRef, createContext, useContext } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 
@@ -13,7 +13,7 @@ export const AudioProvider = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
 
-  // Verificar si el audio ya fue desbloqueado previamente
+
   useEffect(() => {
     const unlocked = localStorage.getItem('audioUnlocked');
     if (unlocked === 'true') {
@@ -21,7 +21,7 @@ export const AudioProvider = ({ children }) => {
     }
   }, []);
 
-  // Crear audio de fondo
+
   useEffect(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio("/music/background-music.mp3");
@@ -30,14 +30,14 @@ export const AudioProvider = ({ children }) => {
       audioRef.current.muted = isMuted;
     }
 
-    // Actualizar el audio cuando cambie el volumen o mute
+
     if (audioRef.current) {
       audioRef.current.volume = volume;
       audioRef.current.muted = isMuted;
     }
   }, [volume, isMuted]);
 
-  // Guardar estado de audio desbloqueado
+ 
   useEffect(() => {
     if (audioUnlocked) {
       localStorage.setItem('audioUnlocked', 'true');
@@ -50,10 +50,10 @@ export const AudioProvider = ({ children }) => {
         await audioRef.current.play();
         setIsPlaying(true);
         setAudioUnlocked(true);
-        console.log("🔊 Audio desbloqueado para toda la app");
+       
       }
     } catch (err) {
-      console.warn("No se pudo desbloquear audio:", err);
+     
     }
   };
 
@@ -101,7 +101,7 @@ const playClickButton = () => {
         await audioRef.current.play();
         setIsPlaying(true);
       } catch (err) {
-        console.warn("No se pudo reproducir el audio:", err);
+  
       }
     }
   };
@@ -155,7 +155,7 @@ const playClickButton = () => {
   );
 };
 
-// Componente de control visual (volumen, mute)
+
 export const AudioControl = ({ genero }) => {
   const { isMuted, volume, toggleMute, changeVolume } = useAudio();
   const [showSlider, setShowSlider] = useState(false);

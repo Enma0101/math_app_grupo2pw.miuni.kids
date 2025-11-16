@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { LogOut } from "lucide-react";
 
-// Importa tus imágenes
+
 import Background from "../assets/BackgroundLogin.svg";
 import Backgroundgirl from "../assets/BackgroundLoginGirl.svg";
 import Number2 from "../assets/Number2.png";
@@ -18,8 +18,9 @@ import StarP from "../assets/StarPink.png";
 import StarG from "../assets/StarGreen.png";
 
 import { useAudio, AudioControl } from "../components/AudioManager";
+import { apiGetStars } from "../services/api";
 
-// Componente TypewriterText SIMPLIFICADO
+// Componente TypewriterText
 const TypewriterText = ({
   text,
   speed = 50,
@@ -68,54 +69,73 @@ const TypewriterText = ({
 };
 
 export default function Home() {
-  const { playClick,playClickButton ,playAudio } = useAudio();
-  const { user, refreshUser, logout } = useAuth();
+  const { playClick, playClickButton, playAudio } = useAudio();
+  const { user, refreshUser, logout, token } = useAuth();
   const navigate = useNavigate();
 
-  // Estado derivado del usuario autenticado
-  const [genero, setGenero] = useState(user?.gender || "hombre");
-  const [userName, setUserName] = useState(user?.full_name || user?.username || "");
-  const [TotalStar] = useState(0); // TODO: conectar con progreso real
-  // Navegación usa el valor pasado; no se conserva en estado local
-
+  const [showLoading, setShowLoading] = useState(true);
+  const [TotalStar, setTotalStar] = useState();
   const [typewriterStarted, setTypewriterStarted] = useState(false);
 
   const handleActivity = (kindOperationValue) => {
     navigate("/Seleccion", {
-      state: { kindOperation: kindOperationValue, genero },
+      state: { kindOperation: kindOperationValue, genero, TotalStar : TotalStar },
     });
   };
 
-  // Reproducir audio y refrescar datos del usuario (por si cambió algo en backend)
+
+  useEffect(() => {
+    const loadProgress = async () => {
+      if (user?.id_user && token) {
+        try {
+        const progressData = await apiGetStars(token, user.id_user);
+          setTotalStar(progressData?.total_stars || 0);
+        } catch (error) {
+       
+        }
+      }
+    };
+
+    loadProgress();
+  }, [user?.id_user, token]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      playAudio();
-      refreshUser();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [playAudio, refreshUser]);
+      setShowLoading(false);
+    }, 3000);
 
-  // Sincronizar cuando user cambie (login / refresh)
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
-    if (user) {
-      setGenero(user.gender || "hombre");
-      setUserName(user.full_name || user.username);
-    }
-  }, [user]);
+    refreshUser();
+  }, []);
 
   const handleTypewriterStart = () => {
     if (!typewriterStarted) {
       setTypewriterStarted(true);
     }
   };
+  
+  if (showLoading && (!user || user.gender === undefined || user.gender === null)) {
+    return (
+      <div className="h-screen bg-gradient-to-b from-blue-400 to-blue-300 flex items-center justify-center">
+        <div className="animate-pulse text-white text-5xl" style={{ fontFamily: "Kavoon, cursive" }}>
+          Cargando...
+        </div>
+      </div>
+    );
+  }
 
+  const genero = user.gender;
+  const userName = user.full_name || user.username || "";
   const tomarPrimeraPalabra = (nombre) => {
     return nombre.trim().split(/\s+/)[0];
   };
   const primerNombre = tomarPrimeraPalabra(userName);
 
   return (
-  <div className="h-screen bg-linear-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="h-screen bg-linear-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
       <AudioControl genero={genero} />
 
       {genero === "mujer" ? (
@@ -129,6 +149,7 @@ export default function Home() {
         <img
           src={Background}
           draggable={false}
+          backgroundSize ="cover"
           alt="Background"
           className="absolute w-full h-full object-cover object-center"
         />
@@ -243,7 +264,6 @@ export default function Home() {
         </nav>
       </div>
 
-      {/* Imagen numeros */}
       {genero === "mujer" ? (
         <div className="relative top-95 right-100 z-20">
           <img
@@ -264,7 +284,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Tarjeta de bienvenida */}
       {genero === "mujer" ? (
         <div className="rounded-3xl p-8 mb-8 relative top-45 left-10">
           <div>
@@ -294,17 +313,10 @@ export default function Home() {
               }}
             >
               <TypewriterText
-                text="¿Qué realizaremos hoy?"
+                text="¿Qué realizaremos hoy?"
                 speed={40}
                 delay={1800}
               />
-              <span style={{ display: "block" }}>
-                <TypewriterText
-                  text="realizaremos hoy?"
-                  speed={40}
-                  delay={2700}
-                />
-              </span>
             </p>
           </div>
         </div>
@@ -337,7 +349,7 @@ export default function Home() {
               }}
             >
               <TypewriterText
-                text="¿Qué realizaremos hoy? "
+                text="¿Qué realizaremos hoy? "
                 speed={40}
                 delay={1800}
               />
@@ -346,7 +358,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Tarjeta de estrellas */}
       {genero === "mujer" ? (
         <div className="relative bottom-20 left-140 bg-ground-custom2girl bg-custom-gradient-girl2 rounded-3xl p-8 h-42 w-80 shadow-4xl z-40 subtle-bounce">
           <h3
@@ -367,7 +378,7 @@ export default function Home() {
             className="relative text-2xl md:text-7xl mb-2 inline-block bg-clip-text text-transparent bottom-10"
             style={{
               fontFamily: "Kavoon, cursive",
-              backgroundImage: "linear-gradient(to right, #ED06E5, #5F005C)",
+              backgroundImage: "linear-gradient(to right, #FF9254, #FFB212)",
             }}
           >
             {TotalStar}
@@ -401,7 +412,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Imagen estrellas */}
       {genero === "mujer" ? (
         <img
           src={StarPY}
@@ -440,7 +450,7 @@ export default function Home() {
             playClickButton();
             handleActivity("Sumas");
           }}
-          className={` group relative rounded-3xl p-10 bottom-80 w-150 shadow-lg hover:shadow-2xl transition-transform duration-300 hover:scale-105 mt-3 sm:mt-5 ${
+          className={` group relative rounded-3xl p-10 bottom-70 w-150 shadow-lg hover:shadow-2xl transition-transform duration-300 hover:scale-105 mt-3 sm:mt-5 ${
             genero === "mujer"
               ? "bg-ground-custom2girl bg-custom-gradient-girl2"
               : "bg-ground-custom2 bg-custom-gradient"
@@ -522,7 +532,7 @@ export default function Home() {
             playClickButton();
             handleActivity("Restas");
           }}
-          className={`group relative rounded-3xl p-10 bottom-80 w-150 shadow-lg hover:shadow-2xl transition-transform duration-300 hover:scale-105 mt-3 sm:mt-5 ${
+          className={`group relative rounded-3xl p-10 bottom-70 w-150 shadow-lg hover:shadow-2xl transition-transform duration-300 hover:scale-105 mt-3 sm:mt-5 ${
             genero === "mujer"
               ? "bg-ground-custom2girl bg-custom-gradient-girl2"
               : "bg-ground-custom2 bg-custom-gradient"

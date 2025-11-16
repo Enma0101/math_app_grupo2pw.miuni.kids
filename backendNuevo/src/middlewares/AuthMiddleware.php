@@ -1,31 +1,52 @@
 <?php
 namespace App\Middlewares;
 
-use App\Helpers\JsonResponder as JR;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Nyholm\Psr7\Response;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
-class AuthMiddleware {
-    public function __invoke(Request $req, $handler): Response {
-        $auth = $req->getHeaderLine('Authorization');
-        if (!preg_match('/^Bearer\s+(.*)$/i', $auth, $m)) {
-            $res = new \Nyholm\Psr7\Response();
-            return JR::error($res, 'Token faltante', 401);
-        }
-        $token = $m[1];
-        $secret = $_ENV['JWT_SECRET'] ?? null;
-        if (!$secret) {
-            $res = new \Nyholm\Psr7\Response();
-            return JR::error($res, 'JWT_SECRET no configurado', 500);
-        }
+class AuthMiddleware
+{
+    public function __invoke(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
         try {
-            $decoded = \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($secret, 'HS256'));
-        } catch (\Throwable $e) {
-            $res = new \Nyholm\Psr7\Response();
-            return JR::error($res, 'Token inválido: '.$e->getMessage(), 401);
+            $authHeader = $request->getHeaderLine('Authorization');
+
+            if (empty($authHeader)) {
+                return $this->error("Token no proporcionado", 401);
+            }
+
+            $token = str_replace('Bearer ', '', $authHeader);
+
+            // Decodificar JWT
+            $decoded = JWT::decode($token, new Key($_ENV['JWT_SECRET'], 'HS256'));
+
+            // Pasar el usuario al request
+            $request = $request->withAttribute('user', $decoded);
+
+            return $handler->handle($request);
+
+        } catch (\Exception $e) {
+            return $this->error("Token inválido: " . $e->getMessage(), 401);
         }
-        // Propagar user_id autenticado
-        $req = $req->withAttribute('auth_user_id', $decoded->sub ?? null);
-        return $handler->handle($req);
+    }
+
+    private function error($message, $status)
+    {
+        $response = new Response();
+        $response->getBody()->write(json_encode([
+            'ok' => false,
+            'message' => $message
+        ], JSON_UNESCAPED_UNICODE));
+
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Access-Control-Allow-Origin', 'http://localhost:5173')
+            ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            ->withStatus($status);
     }
 }

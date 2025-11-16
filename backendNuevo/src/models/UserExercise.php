@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $user_answer
  * @property bool $is_correct
  * @property \Carbon\CarbonImmutable|null $solved_at
- * @property bool $is_blocked
  */
 class UserExercise extends Model {
   protected $table = 'user_exercises';
@@ -23,7 +22,7 @@ class UserExercise extends Model {
 
   protected $fillable = [
     'user_id','level_id','operation_type','number1','number2',
-    'correct_result','user_answer','is_correct','solved_at','is_blocked'
+    'correct_result','user_answer','is_correct','solved_at',
   ];
 
   protected $casts = [
@@ -34,7 +33,6 @@ class UserExercise extends Model {
     'correct_result' => 'integer',
     'user_answer'    => 'integer',
     'is_correct'     => 'boolean',
-    'is_blocked'     => 'boolean',
     'solved_at'      => 'immutable_datetime',
   ];
 }

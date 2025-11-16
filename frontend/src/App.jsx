@@ -7,25 +7,26 @@ import Seleccion from './pages/Seleccion';
 import Game from './pages/Game';
 import Exercise from './pages/Exercise';
 import './index.css';
-import { ProtectedRoute } from './context/AuthContext.jsx';
+import { ProtectedRoute, FlowRoute } from './context/AuthContext.jsx';
 
 function App() {
   return (
     <AudioProvider>
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/Home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-        <Route path="/Seleccion" element={<ProtectedRoute><Seleccion /></ProtectedRoute>} />
-        <Route path="/Game" element={<ProtectedRoute><Game /></ProtectedRoute>} />
-        <Route path="/Exercise" element={<ProtectedRoute><Exercise /></ProtectedRoute>} />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
+          {/* Home siempre accesible si está logueado */}
+          <Route path="/Home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
 
-      </Routes>
-    </Router>
-
+          {/* Rutas internas controladas por FlowRoute */}
+          <Route path="/Seleccion" element={<FlowRoute><Seleccion /></FlowRoute>} />
+          <Route path="/Game" element={<FlowRoute><Game /></FlowRoute>} />
+          <Route path="/Exercise" element={<FlowRoute><Exercise /></FlowRoute>} />
+        </Routes>
+      </Router>
     </AudioProvider>
   );
 }
