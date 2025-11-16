@@ -66,7 +66,7 @@ const playClickButton = () => {
 
  const playCorrect2 = () => {
     const clickSound = new Audio("/music/correct-sound2.mp3");
-    clickSound.volume = 0.2;
+    clickSound.volume = 0.4;
     clickSound.play().catch(() => {});
   };
 
@@ -77,7 +77,7 @@ const playClickButton = () => {
   };
    const playincorrect = () => {
     const correctSound = new Audio("/music/incorrect-sound.mp3");
-    correctSound.volume = 0.3;
+    correctSound.volume = 0.4;
     correctSound.play().catch(() => {});
   };
 
@@ -91,7 +91,7 @@ const playClickButton = () => {
 
   const playCorrect = () => {
     const correctSound = new Audio("/music/correct-sound.mp3");
-    correctSound.volume = 0.3;
+    correctSound.volume = 0.4;
     correctSound.play().catch(() => {});
   };
 
