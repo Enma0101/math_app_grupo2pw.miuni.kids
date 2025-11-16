@@ -4,44 +4,41 @@ use App\Controllers\UserController;
 use App\Controllers\LevelController;
 use App\Controllers\ExerciseController;
 use App\Controllers\ProgressController;
+use App\Controllers\StreakController;
 use Slim\Routing\RouteCollectorProxy;
 use App\Middlewares\AuthMiddleware;
 
-// Preflight CORS: responder vacío sin reenrutar (evita 500 y Method Not Allowed)
-$app->options('/{routes:.+}', function($request, $response){
-  return $response
-    ->withHeader('Access-Control-Allow-Origin', $_ENV['CORS_ORIGIN'] ?? '*')
-    ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept')
-    ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-});
 
-// Salud
 $app->get('/', fn($req,$res)=>\App\Helpers\JsonResponder::success($res, ['hello'=>'math_app']));
 
-// AUTH
 $app->post('/auth/register', [AuthController::class, 'register']);
 $app->post('/auth/login',    [AuthController::class, 'login']);
 
-// USERS (CRUD mínimo)
 $app->group('/users', function(RouteCollectorProxy $g){
   $g->get('/{id}',   [UserController::class, 'show']);
-  $g->put('/{id}',   [UserController::class, 'update']);   // actualizar perfil
-  $g->delete('/{id}',[UserController::class, 'destroy']);  // opcional (admin)
+  $g->put('/{id}',   [UserController::class, 'update']);
+  $g->delete('/{id}',[UserController::class, 'destroy']);
 })->add(new AuthMiddleware());
 
-// LEVELS (lectura y admin opcional)
-$app->get('/levels',           [LevelController::class, 'index']);
-// $app->post('/levels',       [LevelController::class, 'store']);   // si habilitas admin
-// $app->put('/levels/{id}',   [LevelController::class, 'update']);
-// $app->delete('/levels/{id}',[LevelController::class, 'destroy']);
+$app->group('/levels', function(RouteCollectorProxy $g){
+    $g->get('/{levelId}/stars', [LevelController::class, 'getStarsForLevel']);
+})->add(new AuthMiddleware());
 
-// EXERCISES
-$app->get('/exercises/{type}/{levelId}', [ExerciseController::class, 'generate']); // 8 ejercicios
-$app->post('/exercises/answer',          [ExerciseController::class, 'saveAnswer'])->add(new AuthMiddleware());
-$app->post('/exercises/select',          [ExerciseController::class, 'storeSelection'])->add(new AuthMiddleware()); // registra solo la selección de nivel/operación
-$app->post('/exercises/attempt',         [ExerciseController::class, 'storeAttempt'])->add(new AuthMiddleware()); // almacena un intento (correcto/incorrecto) sin validación
+$app->group('/exercises', function(RouteCollectorProxy $g){
+  $g->post('/save-batch',    [ExerciseController::class, 'saveBatchExercises']);
+  $g->get('/user/{userId}',  [ExerciseController::class, 'getUserExercises']);
+  $g->put('/{exerciseId}',   [ExerciseController::class, 'updateExercise']);
+  $g->delete('/delete-level',[ExerciseController::class, 'deleteLevelExercises']);
+})->add(new AuthMiddleware());
 
-// PROGRESS
-$app->get('/progress/{userId}',  [ProgressController::class, 'show'])->add(new AuthMiddleware());
-$app->post('/progress/update',   [ProgressController::class, 'updateTotals'])->add(new AuthMiddleware());
-$app->post('/progress/reset',    [ProgressController::class, 'reset'])->add(new AuthMiddleware());
+$app->group('/progress', function(RouteCollectorProxy $g){
+    $g->get('/{userId}', [ProgressController::class, 'show']);
+    $g->get('/stars/{userId}', [ProgressController::class, 'getStars']);
+    $g->post('/update/stars', [ProgressController::class, 'updateStars']);
+   // Streaks
+    $g->get('/streak/{userId}', [StreakController::class, 'getStreak']);
+    $g->post('/streak/update', [StreakController::class, 'updateStreak']);
+    $g->post('/streak/reset', [StreakController::class, 'resetStreak']); // ✅ NUEVA
+
+
+})->add(new AuthMiddleware());

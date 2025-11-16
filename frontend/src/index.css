@@ -7,21 +7,57 @@
   font-style: normal;
 }
 
+
+#cursor-custom {
+  width: 32px;
+  height: 32px;
+  background-image: url('/arrowclick.png');
+  background-size: cover;
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+
 html, body {
-  cursor: url('/arrowclick.png') 0 0, auto;
+  cursor: none !important;
 }
 
+[style*="overflow"],
+[style*="overflow-y"],
+[style*="overflow-x"],
+.overflow-auto,
+.overflow-scroll,
+.overflow-y-scroll,
+.overflow-x-scroll {
+  cursor: url('/arrowclick.png') 32px 32px, auto !important;
+}
+
+* {
+  cursor: url('/arrowclick.png') 0 0, auto !important;
+}
+
+
+/* LOS BOTONES Y ENLACES USAN OTRO */
 button, a {
-  cursor: url('/mouseclicks.png') 0 0 , pointer;
+  cursor: url('/mouseclicks.png') 0 0, pointer !important;
+}
+button * {
+  cursor: inherit !important; /* hereda del botón */
 }
 
+/* LOS INPUTS USAN CURSOR DE TEXTO */
+input, textarea {
+  cursor: url('/textclicks.png') 0 0, text !important;
+}
+
+/* Opcional: labels */
 label {
-  cursor: url('/arrowclick.png'), auto;
+  cursor: url('/arrowclick.png') 0 0, auto !important;
 }
 
-input {
-  cursor: url('/textclicks.png') , auto;
-}
 
 
 .bg-custom-gradient {
@@ -52,7 +88,7 @@ input {
 }
 
 .bg-ground-custom-selector {
-  background-color: #21b94aff;
+  background-color: rgb(209, 209, 209);
 }
 
 
