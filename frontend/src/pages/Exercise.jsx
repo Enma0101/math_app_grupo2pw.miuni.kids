@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { ChevronRight, RotateCcw } from "lucide-react";
 import Swal from "sweetalert2";
 
-// Importa tus imágenes
+
 import Background from "../assets/BackgroundLogin.svg";
 import Backgroundgirl from "../assets/BackgroundLoginGirl.svg";
 import Number2 from "../assets/Number2.png";
@@ -17,26 +17,39 @@ import Cross from "../assets/Cross Mark.png";
 import StarR from "../assets/starR.png";
 import Cat from "../assets/catawesome.gif";
 import Catsad from "../assets/catsad.gif";
-import { updateExerciseInStorage, getStreak, incrementStreak, resetStreakOnFailure } from "../utils/exerciseGenerator";
+import PizzarraBg from "../assets/pizarra.svg";
+import { updateExerciseInStorage } from "../utils/exerciseGenerator";
 import { useAudio } from "../components/AudioManager";
 import { useAuth } from "../context/AuthContext";
-import { apiAttemptExercise } from "../services/api";
+import {
+  apiGetStars,
+  apiUpdateStars,
+  apiUpdateStreak,
+  apiResetStreak,
+  apiGetStreak,
+} from "../services/api";
 
 export default function Exercise({ onExit }) {
   const { state } = useLocation();
   const navigate = useNavigate();
-
-  // ✅ IMPORTAR FUNCIONES DE AUDIO
-  const { playClick, playClickButton, playCorrect, playCorrect2, playincorrect, pauseAudio , addnumber,playAudio } = useAudio();
   const { token, user } = useAuth();
+  const userId = user?.id_user;
 
-  // ✅ PAUSAR MÚSICA DE FONDO AL ENTRAR (solo audio)
+  const {
+    playClick,
+    playClickButton,
+    playCorrect,
+    playCorrect2,
+    playincorrect,
+    pauseAudio,
+    addnumber,
+    playAudio,
+  } = useAudio();
+
   useEffect(() => {
     pauseAudio();
-    return () => { playAudio(); };
-  }, [pauseAudio, playAudio]);
+  }, []);
 
-  // ✅ RECIBIR DATOS DESDE GAME
   const {
     exercise,
     exerciseIndex,
@@ -44,83 +57,141 @@ export default function Exercise({ onExit }) {
     genero,
     nivel,
     allExercises,
+    stars,
   } = state || {};
 
-  // ✅ Cargar racha persistida por usuario/operación
-  useEffect(() => {
-    if (user?.id_user && kindOperation) {
-      const st = getStreak(user.id_user, kindOperation);
-      setcurrent_streak(st?.total || 0);
-    }
-  }, [user?.id_user, kindOperation]);
-
-  // Estados básicos
-  // Eliminados estados no utilizados: userName, TotalStar
+  const [TotalStar, setTotalStar] = useState(100);
   const [current_streak, setcurrent_streak] = useState(0);
-  const [Star_for_level] = useState(3);
+  const [Star_for_level] = useState(stars);
 
-  // ✅ USAR LOS DATOS DEL EJERCICIO RECIBIDO
   const [operation, setOperation] = useState("+");
   const [num1, setNum1] = useState("0000");
   const [num2, setNum2] = useState("0000");
   const [correctAnswer, setCorrectAnswer] = useState("");
 
-  // Acumuladores de "llevo" para cada posición
   const [carries, setCarries] = useState([0, 0, 0, 0]);
-
-  // Respuesta del usuario (5 dígitos)
   const [answer, setAnswer] = useState(["", "", "", "", ""]);
-
   const [validationResult, setValidationResult] = useState(null);
+  const [showIncorrectAnimation, setShowIncorrectAnimation] = useState(false);
 
-  // ✅ CARGAR EL EJERCICIO AL MONTAR EL COMPONENTE
+
+  useEffect(() => {
+    const loadStreak = async () => {
+      if (token && userId && kindOperation && nivel) {
+        try {
+        
+          const streakResponse = await apiGetStreak(
+            token,
+            userId,
+            kindOperation
+          );
+        
+
+
+          if (streakResponse && !Array.isArray(streakResponse)) {
+            // Mapear nivel a dificultad
+            let difficulty;
+            if (typeof nivel === "number") {
+              difficulty =
+                nivel === 1 ? "facil" : nivel === 2 ? "medio" : "dificil";
+            } else {
+              const nivelLower = nivel.toLowerCase();
+              difficulty =
+                nivelLower === "fácil"
+                  ? "facil"
+                  : nivelLower === "medio"
+                  ? "medio"
+                  : "dificil";
+            }
+
+            const currentLevelStreak =
+              streakResponse[`${difficulty}_count`] || 0;
+            setcurrent_streak(currentLevelStreak);
+         
+          }
+   
+          else if (Array.isArray(streakResponse) && streakResponse.length > 0) {
+            const streakData = streakResponse.find(
+              (s) => s.operation_type === kindOperation
+            );
+
+            if (streakData) {
+           
+              let difficulty;
+              if (typeof nivel === "number") {
+                difficulty =
+                  nivel === 1 ? "facil" : nivel === 2 ? "medio" : "dificil";
+              } else {
+                const nivelLower = nivel.toLowerCase();
+                difficulty =
+                  nivelLower === "fácil"
+                    ? "facil"
+                    : nivelLower === "medio"
+                    ? "medio"
+                    : "dificil";
+              }
+
+              const currentLevelStreak = streakData[`${difficulty}_count`] || 0;
+              setcurrent_streak(currentLevelStreak);
+            
+            } else {
+           
+              setcurrent_streak(0);
+            }
+          } else {
+           
+            setcurrent_streak(0);
+          }
+        } catch (error) {
+       
+          setcurrent_streak(0);
+        }
+      }
+    };
+
+    loadStreak();
+  }, [token, userId, kindOperation, nivel]);
+
   useEffect(() => {
     if (exercise) {
-      // Configurar operación
       setOperation(exercise.operation_type === "Sumas" ? "+" : "-");
-
-      // Configurar números (asegurar 4 dígitos)
       setNum1(exercise.number1.toString().padStart(4, "0"));
       setNum2(exercise.number2.toString().padStart(4, "0"));
-
-      // Configurar respuesta correcta
       setCorrectAnswer(exercise.correct_result.toString());
     }
   }, [exercise]);
 
-  const isCarryEnabled = () => true;
+  const isCarryEnabled = (index) => {
+    return true;
+  };
 
-  // Verificar si un cuadro de respuesta está habilitado
   const isAnswerEnabled = (index) => {
     if (index === 4) return true;
     return answer[index + 1] !== "";
   };
 
-  // Cambiar el valor de un acumulador de "llevo"
   const handleCarryClick = (index) => {
     if (!isCarryEnabled(index)) return;
-
     const newCarries = [...carries];
     newCarries[index] = (newCarries[index] + 1) % 10;
     setCarries(newCarries);
+    // Ocultar la animación cuando el usuario cambia los números
+    setShowIncorrectAnimation(false);
   };
 
-  // Cambiar el valor de un dígito de respuesta
   const handleAnswerClick = (index) => {
     if (!isAnswerEnabled(index)) return;
-
     const newAnswer = [...answer];
     newAnswer[index] =
       newAnswer[index] === ""
         ? "0"
         : String((parseInt(newAnswer[index]) + 1) % 10);
     setAnswer(newAnswer);
-    setValidationResult(null);
+    // Ocultar la animación cuando el usuario cambia la respuesta
+    setShowIncorrectAnimation(false);
   };
 
-  // ✅ FUNCIÓN PARA VERIFICAR LA RESPUESTA
   const handleVerify = async () => {
-    // Contar dígitos llenados desde la derecha
     let filledCount = 0;
     for (let i = 4; i >= 0; i--) {
       if (answer[i] !== "") {
@@ -136,88 +207,160 @@ export default function Exercise({ onExit }) {
       const startIndex = 5 - filledCount;
       userAnswerString = answer.slice(startIndex).join("");
 
-      // Validar
-      if (userAnswerString === correctAnswer) {
+   const userAnswerNumber = parseInt(userAnswerString, 10);
+   const correctAnswerNumber = parseInt(correctAnswer, 10);
+
+      if (userAnswerNumber === correctAnswerNumber) {
         setValidationResult("correct");
-        
-        // ✅ REPRODUCIR SONIDO DE CORRECTO
         playCorrect();
-        
-        // ✅ AUMENTAR RACHA PERSISTENTE Y REPRODUCIR SONIDO ESPECIAL
-        if (user?.id_user && kindOperation) {
-          const st = incrementStreak(user.id_user, kindOperation, nivel);
-          setcurrent_streak(st.total);
-          playCorrect2();
-        }
 
-        // ✅ ACTUALIZAR EL EJERCICIO EN STORAGE
-        const updatedExercise = {
-          ...exercise,
-          is_correct: true,
-          user_answer: parseInt(userAnswerString),
-          solved_at: new Date().toISOString(),
-        };
-
-        if(user?.id_user){
-          updateExerciseInStorage(
-            user.id_user,
-            kindOperation,
-            nivel,
-            genero,
-            exerciseIndex,
-            updatedExercise
-          );
-        }
-
-        // Enviar intento correcto al backend (no altera la lógica del front)
         try {
-          if (token && user?.id_user) {
-            const levelMap = { "Facil": 1, "Medio": 2, "Dificil": 3 };
-            await apiAttemptExercise(token, {
-              user_id: user.id_user,
-              level_id: levelMap[nivel] || 1,
-              operation_type: kindOperation,
-              number1: exercise.number1,
-              number2: exercise.number2,
-              correct_result: exercise.correct_result,
-              user_answer: parseInt(userAnswerString),
+          if (token && userId && exercise?.id_exercise) {
+            const updatedExercise = {
+              ...exercise,
               is_correct: true,
-              is_blocked: false,
-              solved_at: new Date().toISOString()
-            });
+              user_answer: parseInt(userAnswerString),
+              solved_at: new Date().toISOString(),
+            };
+
+            await updateExerciseInStorage(
+              kindOperation,
+              nivel,
+              genero,
+              exerciseIndex,
+              updatedExercise,
+              token
+            );
+        
+
+    
+            try {
+              const currentStarsResponse = await apiGetStars(token, userId);
+
+           
+
+              if (currentStarsResponse?.total_stars !== undefined) {
+                const currentStars = currentStarsResponse.total_stars;
+                const newTotalStars = currentStars + Star_for_level;
+
+       
+
+                const updatePayload = {
+                  user_id: userId,
+                  total_stars: newTotalStars,
+                };
+
+         
+                const updateResponse = await apiUpdateStars(
+                  token,
+                  updatePayload
+                );
+
+              
+
+                if (updateResponse) {
+                  setTotalStar(newTotalStars);
+               
+                }
+              } else {
+              
+              }
+            } catch (starError) {
+             
+            }
+
+
+            try {
+              let difficulty;
+              if (typeof nivel === "number") {
+                difficulty =
+                  nivel === 1 ? "facil" : nivel === 2 ? "medio" : "dificil";
+              } else {
+                const nivelLower = nivel.toLowerCase();
+                difficulty =
+                  nivelLower === "fácil"
+                    ? "facil"
+                    : nivelLower === "medio"
+                    ? "medio"
+                    : "dificil";
+              }
+
+           
+
+              const streakPayload = {
+                user_id: userId,
+                operation_type: kindOperation,
+                difficulty: difficulty,
+              };
+
+             
+
+              const streakResponse = await apiUpdateStreak(
+                token,
+                streakPayload
+              );
+
+   
+
+              // Actualizar el estado local con la nueva racha
+              if (streakResponse) {
+                const newStreak = streakResponse[`${difficulty}_count`] || 0;
+                setcurrent_streak(newStreak);
+                playCorrect2();
+               
+              }
+            } catch (streakError) {
+            
+            }
+
+            if (allExercises) {
+              const updatedAllExercises = [...allExercises];
+              updatedAllExercises[exerciseIndex] = updatedExercise;
+            
+            }
           }
-        } catch(e) {
-          console.warn('Falló registro de intento correcto:', e?.message);
+        } catch (error) {
+        
         }
       } else {
         setValidationResult("incorrect");
-        
-        // ✅ REPRODUCIR SONIDO DE INCORRECTO
+        setShowIncorrectAnimation(true);
         playincorrect();
-        // Reiniciar racha completa por fallo
-        if (user?.id_user && kindOperation) {
-          const st = resetStreakOnFailure(user.id_user, kindOperation);
-          setcurrent_streak(st.total);
-        }
-        // Enviar intento incorrecto (is_blocked true) al backend
+
+  
         try {
-          if (token && user?.id_user) {
-            const levelMap = { "Facil": 1, "Medio": 2, "Dificil": 3 };
-            await apiAttemptExercise(token, {
-              user_id: user.id_user,
-              level_id: levelMap[nivel] || 1,
-              operation_type: kindOperation,
-              number1: exercise.number1,
-              number2: exercise.number2,
-              correct_result: exercise.correct_result,
-              user_answer: userAnswerString ? parseInt(userAnswerString) : null,
-              is_correct: false,
-              is_blocked: true,
-              solved_at: new Date().toISOString()
-            });
+          let difficulty;
+          if (typeof nivel === "number") {
+            difficulty =
+              nivel === 1 ? "facil" : nivel === 2 ? "medio" : "dificil";
+          } else {
+            const nivelLower = nivel.toLowerCase();
+            difficulty =
+              nivelLower === "fácil"
+                ? "facil"
+                : nivelLower === "medio"
+                ? "medio"
+                : "dificil";
           }
-        } catch(e) {
-          console.warn('Falló registro de intento incorrecto:', e?.message);
+
+        
+
+          const resetPayload = {
+            user_id: userId,
+            operation_type: kindOperation,
+            difficulty: difficulty,
+          };
+
+         
+
+          await apiResetStreak(token, resetPayload);
+
+          // Resetear el estado local
+          setcurrent_streak(0);
+
+       
+        } catch (resetError) {
+  
         }
       }
     } else {
@@ -226,14 +369,12 @@ export default function Exercise({ onExit }) {
           Swal.fire({
             icon: "warning",
             title: "¡Upss!",
-            text: "Debes ingresar un resultado antes de continuar ",
+            text: "Debes ingresar un resultado antes de continuar",
             confirmButtonColor: "#2fe317ff",
-
             customClass: {
-              popup: "rounded-xl font-kavoon shadow-lg  alerta-redondeada",
+              popup: "rounded-xl font-kavoon shadow-lg alerta-redondeada",
               confirmButton: "mi-boton-confirmar",
               cancelButton: "mi-boton-cancelar",
-
               title: "mi-alerta-titulo",
               htmlContainer: "mi-alerta-texto",
             },
@@ -249,18 +390,15 @@ export default function Exercise({ onExit }) {
             customClass: {
               popup: "mi-alerta-popup",
               title: "mi-alerta-titulo",
-
               htmlContainer: "mi-alerta-texto",
             },
           });
         }
-
         return;
       }
     }
   };
 
-  // Resetear todo
   const handleReset = () => {
     if (
       validationResult === "incorrect" ||
@@ -270,35 +408,29 @@ export default function Exercise({ onExit }) {
       setCarries([0, 0, 0, 0]);
       setAnswer(["", "", "", "", ""]);
       setValidationResult(null);
+      setShowIncorrectAnimation(false);
     }
   };
 
-  // ✅ FUNCIÓN PARA CONTINUAR AL SIGUIENTE EJERCICIO O REGRESAR
   const handleContinue = () => {
     playClickButton();
-    
-    // 🔹 Desactivar visuales antes de cambiar de pantalla
     setValidationResult(null);
+    setShowIncorrectAnimation(false);
     setCarries([0, 0, 0, 0]);
     setAnswer(["", "", "", "", ""]);
-    
-    // 🔹 Pequeño delay para permitir limpiar la interfaz (200ms)
+
     setTimeout(() => {
       if (allExercises && exerciseIndex < allExercises.length - 1) {
-        // ✅ BUSCAR EL SIGUIENTE EJERCICIO NO COMPLETADO
         let nextIndex = exerciseIndex + 1;
-        
-        // Buscar el siguiente ejercicio que no esté completado
+
         while (nextIndex < allExercises.length) {
           const nextExercise = allExercises[nextIndex];
-          // Si el ejercicio no está completado (is_correct no es true), lo usamos
           if (!nextExercise.is_correct) {
             break;
           }
           nextIndex++;
         }
-        
-        // ✅ VERIFICAR SI ENCONTRAMOS UN EJERCICIO NO COMPLETADO
+
         if (nextIndex < allExercises.length) {
           navigate("/Exercise", {
             state: {
@@ -308,10 +440,10 @@ export default function Exercise({ onExit }) {
               genero,
               nivel,
               allExercises,
+              stars,
             },
           });
         } else {
-          // ✅ SI TODOS LOS EJERCICIOS ESTÁN COMPLETADOS, IR AL JUEGO
           navigate("/Game", {
             state: {
               kindOperation,
@@ -321,7 +453,6 @@ export default function Exercise({ onExit }) {
           });
         }
       } else {
-        // ✅ SI ES EL ÚLTIMO EJERCICIO, IR AL JUEGO
         navigate("/Game", {
           state: {
             kindOperation,
@@ -333,20 +464,26 @@ export default function Exercise({ onExit }) {
     }, 200);
   };
 
-  // ✅ FUNCIÓN PARA REGRESAR A GAME
   const handleGoBack = () => {
     playClickButton();
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate("/Game", {
-        state: { kindOperation, genero, nivel },
-      });
-    }
+    navigate("/Game", {
+      state: {
+        kindOperation: kindOperation,
+        genero: genero,
+        nivel:
+          nivel === 1
+            ? "Fácil"
+            : nivel === 2
+            ? "Medio"
+            : nivel === 3
+            ? "Difícil"
+            : nivel,
+      },
+    });
   };
 
   return (
-  <div className="h-screen bg-linear-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="h-screen bg-gradient-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {genero === "mujer" ? (
         <img
           src={Backgroundgirl}
@@ -364,8 +501,7 @@ export default function Exercise({ onExit }) {
       )}
 
       <div
-        className={`absolute top-0 left-0 right-0 z-20  py-4 sm:py-6 md:py-15 lg:py-20 px-4 md:px-10"
-        ${
+        className={`absolute top-0 left-0 right-0 z-20 py-4 sm:py-6 md:py-15 lg:py-20 px-4 md:px-10 ${
           genero === "mujer"
             ? "bg-ground-custom-girl"
             : genero === "hombre"
@@ -374,14 +510,13 @@ export default function Exercise({ onExit }) {
         }`}
       >
         <nav
-          className={`absolute top-0 left-0 right-0 z-30 py-4 sm:py-6 md:py-15 lg:py-20 px-4 md:px-10"
-        ${
-          genero === "mujer"
-            ? "bg-custom-gradient-girl"
-            : genero === "hombre"
-            ? "bg-custom-gradient"
-            : "bg-gray-400"
-        }`}
+          className={`absolute top-0 left-0 right-0 z-30 py-4 sm:py-6 md:py-15 lg:py-20 px-4 md:px-10 ${
+            genero === "mujer"
+              ? "bg-custom-gradient-girl"
+              : genero === "hombre"
+              ? "bg-custom-gradient"
+              : "bg-gray-400"
+          }`}
         >
           <div className="absolute top-5 left-8 right-18 justify-between flex">
             <svg width="0" height="0">
@@ -463,44 +598,69 @@ export default function Exercise({ onExit }) {
               {genero === "mujer" ? (
                 kindOperation === "Sumas" ? (
                   <h1
-                    className="sm:text-3xl md:text-5xl lg:text-5xl "
-                    style={{
-                      fontFamily: "Kavoon, cursive",
-                      color: "#852526",
-                    }}
+                    className="sm:text-3xl md:text-5xl lg:text-5xl"
+                    style={{ fontFamily: "Kavoon, cursive", color: "#852526" }}
                   >
                     ¡Vamos a Sumar!{" "}
+                    <span
+                      style={{
+                        display: "block",
+                        marginTop: "25px",
+                        marginLeft: "10px",
+                        color: "#ffff",
+                      }}
+                    >
+                      Ejercicio {exerciseIndex + 1}/8
+                    </span>
                   </h1>
                 ) : (
                   <h1
-                    className="sm:text-3xl md:text-5xl lg:text-5xl "
-                    style={{
-                      fontFamily: "Kavoon, cursive",
-                      color: "#852526",
-                    }}
+                    className="sm:text-3xl md:text-5xl lg:text-5xl"
+                    style={{ fontFamily: "Kavoon, cursive", color: "#852526" }}
                   >
                     ¡Vamos a Restar!{" "}
+                    <span
+                      style={{
+                        display: "block",
+                        marginTop: "25px",
+                        color: "#ffff",
+                      }}
+                    >
+                      Ejercicio {exerciseIndex + 1}/8
+                    </span>
                   </h1>
                 )
               ) : kindOperation === "Sumas" ? (
                 <h1
-                  className="sm:text-3xl md:text-5xl lg:text-5xl "
-                  style={{
-                    fontFamily: "Kavoon, cursive",
-                    color: "#FFB212",
-                  }}
+                  className="sm:text-3xl md:text-5xl lg:text-5xl"
+                  style={{ fontFamily: "Kavoon, cursive", color: "#FFB212" }}
                 >
                   ¡Vamos a Sumar!{" "}
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: "25px",
+                      color: "#262A51",
+                    }}
+                  >
+                    Ejercicio {exerciseIndex + 1}/8
+                  </span>
                 </h1>
               ) : (
                 <h1
-                  className="sm:text-3xl md:text-5xl lg:text-5xl "
-                  style={{
-                    fontFamily: "Kavoon, cursive",
-                    color: "#FFB212",
-                  }}
+                  className="sm:text-3xl md:text-5xl lg:text-5xl"
+                  style={{ fontFamily: "Kavoon, cursive", color: "#FFB212" }}
                 >
                   ¡Vamos a Restar!{" "}
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: "25px",
+                      color: "#262A51",
+                    }}
+                  >
+                    Ejercicio {exerciseIndex + 1}/8
+                  </span>
                 </h1>
               )}
             </div>
@@ -519,7 +679,6 @@ export default function Exercise({ onExit }) {
                       Racha{" "}
                       <span className="inline-block">{current_streak}</span>
                     </h1>
-
                     <img
                       src={Llama}
                       draggable={false}
@@ -534,57 +693,71 @@ export default function Exercise({ onExit }) {
         </nav>
       </div>
 
-      <div className="absolute top-50 right-0 w-45 h-50 z-50">
+      <div className="absolute top-40 right-0 w-60  h-60 z-50">
         <img
           src={Number8}
           alt="number8"
-          className="w-45 h-50 object-contain"
+          className="w-70 h-70 object-contain"
           draggable={false}
         />
       </div>
 
-      <div className="absolute bottom-5 left-0 w-40 h-40  z-50">
+      <div className="absolute bottom-5 left-5 w-60 h-60 z-50">
         <img
           src={Number4}
           alt="number4"
-          className="w-40 h-40 object-contain"
+          className="w-45 h-60 object-contain"
           draggable={false}
         />
       </div>
 
-      <div className="absolute top-42 bottom-5 left-15 right-15 rounded-3xl z-10 shadow-3xl overflow-hidden">
+      <div className="absolute   top-42 bottom-5 left-15 right-15 rounded-3xl z-10 shadow-3xl overflow-hidden ">
         <img
           src={fondo1}
           alt="Fondo"
-          className="absolute inset-0 w-full h-full object-cover scale-110"
+          className="  absolute inset-0 w-full h-full object-cover scale-110"
           draggable={false}
         />
 
-  <div className="grid grid-cols-4 grid-rows-4 gap-4 z-50 w-full h-full p-10">
-          <div
-            className="absolute top-25 bottom-5 left-80 right-80 rounded-4xl -translate-y-10 border-4 border-black/10 shadow-xl flex"
-            style={
-              validationResult === "correct"
-                ? {
-                    background: "#21b94aff",
-                    filter: "grayscale(20%) brightness(0.5)",
-                  }
-                : {
-                    fontFamily: "Sansation, cursive",
-                  }
-            }
-          >
-            <div className="relative w-full h-full p-6 rounded-4xl ">
-              {/* Acumuladores de "llevo" */}
-              <div className="absolute top-[10%] left-[50%] -translate-x-1/2 -translate-y-1/2  gap-18 mb-4 pr-2 flex ">
+        <div
+  className="absolute top-15 bottom-0 left-80 right-80  -translate-y-10 border-4 border-black/10 shadow-xl "
+  style={
+    validationResult === "correct"
+      ? {
+          backgroundImage: `url(${PizzarraBg})`,
+          backgroundSize: "100% auto",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          backgroundColor: "#919191ff",
+          filter: "grayscale(20%) brightness(0.5)",
+         
+        }
+      : {
+          fontFamily: "Sansation, cursive",
+          backgroundImage: `url(${PizzarraBg})`,
+          backgroundSize: "100% auto",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat"
+        }
+  }
+>
+
+
+            
+          
+              
+              <div className="absolute top-[12%] left-[50%] -translate-x-1/2 -translate-y-1/2 gap-18 mb-4 pr-2 flex">
                 {carries.map((carry, index) => (
                   <button
                     key={`carry-${index}`}
-                    onClick={() =>{ handleCarryClick(index),addnumber()}}
-                    className="w-12 h-12  flex justify-center items-center border border-black/10 rounded-2xl font-semibold text-4xl transition-transform shadow-md 
-                      text-white text-center hover:scale-110 cursor-pointer"
+                    onClick={() => {
+                      handleCarryClick(index);
+                      addnumber();
+                    }}
+                    className="w-12 h-12 flex justify-center items-center border-1 border-black/10 rounded-2xl font-semibold text-4xl transition-all shadow-md text-white text-center hover:scale-110 cursor-pointer"
                     style={{
-                      background: "#21b94aff",
+                      background: "#d8d8d8ff",
+                      color:"#353535ff",
                       fontFamily: "Sansation, cursive",
                     }}
                   >
@@ -593,27 +766,26 @@ export default function Exercise({ onExit }) {
                 ))}
               </div>
 
-              <div className="absolute  bottom-[40%] right-[20%]  gap-10">
+              <div className="absolute bottom-[40%] right-[20%] gap-10 ">
                 <span
-                  className="text-[250px] font-bold text-white"
-                  style={{ fontFamily: "Sansation, cursive" }}
+                  className="text-[250px] font-bold "
+                  style={{ fontFamily: "Sansation, cursive", color:"#353535ff" }}
                 >
                   {operation}
                 </span>
               </div>
 
-              {/* Primera cifra */}
-              <div className="absolute flex top-[18%] right-[35%]  gap-16 ">
+              <div className="absolute flex top-[18%] right-[35%] gap-16">
                 {num1.split("").map((digit, index) => (
                   <div
                     key={`num1-${index}`}
                     className="w-16 h-20 flex items-center justify-center"
                   >
                     <span
-                      className="text-9xl font-semibold "
+                      className="text-9xl font-semibold"
                       style={{
                         fontFamily: "Sansation, cursive",
-                        color: "#FFFFFF",
+                        color: "#353535ff",
                       }}
                     >
                       {digit}
@@ -622,18 +794,17 @@ export default function Exercise({ onExit }) {
                 ))}
               </div>
 
-              {/* Segunda cifra */}
-              <div className="absolute flex top-[40%] right-[35%]  gap-16 ">
+              <div className="absolute flex top-[40%] right-[35%] gap-16">
                 {num2.split("").map((digit, index) => (
                   <div
                     key={`num2-${index}`}
                     className="w-16 h-20 flex items-center justify-center"
                   >
                     <span
-                      className="text-9xl font-semibold "
+                      className="text-9xl font-semibold"
                       style={{
                         fontFamily: "Sansation, cursive",
-                        color: "#FFFFFF",
+                        color: "#353535ff",
                       }}
                     >
                       {digit}
@@ -642,40 +813,44 @@ export default function Exercise({ onExit }) {
                 ))}
               </div>
 
-              {/* Línea divisoria */}
-              <div className="absolute top-[60%] right-[34%]  z-50">
-                <div className="mx-auto w-[520px] border-t-15 border-white"></div>
+              <div className="absolute top-[60%] right-[34%] z-50">
+                <div className="mx-auto w-[520px] border-t-15 "style={{ borderColor: "#353535ff" }}
+></div>
               </div>
 
-              {/* Área de respuesta */}
-              <div className=" absolute flex top-[65%] right-[32%]  gap-3">
+              <div className="absolute flex top-[65%] right-[32%] gap-3">
                 <div className="w-20"></div>
                 {answer.map((digit, index) => (
-                  <button
-                    key={`answer-${index}`}
-                    onClick={() => {handleAnswerClick(index),addnumber()}}
-                    disabled={
-                      !isAnswerEnabled(index) || validationResult === "correct"
-                    }
-                    className={`w-30 h-35 border rounded-3xl font-semibold text-9xl  transition-transform shadow-lg flex items-center justify-center  ${
-                      isAnswerEnabled(index) && validationResult !== "correct"
-                        ? " bg-ground-custom-selector  border-black/10 border-2 text-white hover:scale-105 cursor-pointer"
-                        : "bg-gray-200 border-gray-400 text-gray-400 cursor-not-allowed opacity-50"
-                    }`}
-                    style={{
-                      fontFamily: "Sansation, cursive",
-                    }}
-                  >
-                    {digit}
-                  </button>
+                <button
+  key={`answer-${index}`}
+  onClick={() => {
+    handleAnswerClick(index);
+    addnumber();
+  }}
+  disabled={
+    !isAnswerEnabled(index) || validationResult === "correct"
+  }
+  className={`w-30 h-35 border-1 rounded-3xl font-semibold text-9xl transition-all shadow-lg flex items-center justify-center ${
+    isAnswerEnabled(index) && validationResult !== "correct"
+      ? "bg-ground-custom-selector border-black/10 border-2 hover:scale-105 cursor-pointer"
+      : "bg-gray-200 border-gray-400 cursor-not-allowed opacity-50"
+  }`}
+  style={{
+    fontFamily: "Sansation, cursive",
+    color: "#353535ff",
+  }}
+>
+  {digit}
+</button>
+
                 ))}
               </div>
             </div>
-          </div>
-        </div>
+          
+        
       </div>
 
-      {validationResult === "incorrect" && (
+      {showIncorrectAnimation && (
         <>
           <div className="absolute bottom-105 right-80 w-50 h-40 z-50">
             <img
@@ -685,7 +860,6 @@ export default function Exercise({ onExit }) {
               className="absolute w-50 h-45 object-contain"
             />
           </div>
-
           <div className="absolute bottom-60 right-120 w-60 h-60 z-50">
             <img
               src={Catsad}
@@ -699,7 +873,7 @@ export default function Exercise({ onExit }) {
 
       {validationResult === "correct" && (
         <>
-          <div className="absolute bottom-20 right-100 w-60 h-60 z-50">
+          <div className="absolute bottom-15 right-100 w-60 h-60 z-50">
             <img
               src={Cat}
               draggable={false}
@@ -707,7 +881,6 @@ export default function Exercise({ onExit }) {
               className="absolute w-60 h-60 object-contain"
             />
           </div>
-
           <div className="absolute bottom-85 right-90 w-60 h-60 z-50">
             <img
               src={Check}
@@ -715,7 +888,6 @@ export default function Exercise({ onExit }) {
               alt="Check"
               className="absolute w-60 h-60 object-contain"
             />
-
             <div className="absolute bottom-0 right-20 w-60 h-60 z-50">
               <h1
                 className="relative bottom-80 right-171 flex font-semibold text-[500px] text-white"
@@ -735,7 +907,6 @@ export default function Exercise({ onExit }) {
                   {Star_for_level}
                 </span>
               </h1>
-
               <div className="absolute bottom-10 right-80 w-50 h-50 z-50">
                 <img
                   src={StarR}
@@ -748,10 +919,8 @@ export default function Exercise({ onExit }) {
           </div>
         </>
       )}
-
-      {/* Botón Verificar o Continuar */}
-      {validationResult === "correct" ? (
-        <div className=" absolute  bottom-90 right-15 z-30 ">
+        {validationResult === "correct" ? (
+        <div className="absolute bottom-90 right-15 z-30">
           {genero === "mujer" ? (
             <button
               onClick={() => {
@@ -759,44 +928,34 @@ export default function Exercise({ onExit }) {
                 handleReset();
               }}
               onMouseEnter={() => playClick()}
-                className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-transform duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg"
-              style={{
-                fontFamily: "Kavoon, cursive",
-                color: "#ffffff",
-              }}
+              className="text-5xl flex items-center gap-2 bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
+              style={{ fontFamily: "Kavoon, cursive", color: "#ffffff" }}
             >
-              Continuar
-              <ChevronRight className="w-15 h-20 " strokeWidth={3} />
+              Continuar <ChevronRight className="w-15 h-20" strokeWidth={3} />
             </button>
           ) : (
+         
             <button
               onClick={() => {
                 handleContinue();
                 handleReset();
               }}
               onMouseEnter={() => playClick()}
-              className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 mt-3 sm:mt-5"
-              style={{
-                fontFamily: "Kavoon, cursive",
-                color: "#FFB212",
-              }}
+              className="text-5xl flex items-center gap-2 bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
+              style={{ fontFamily: "Kavoon, cursive", color: "#FFB212" }}
             >
-              Continuar
-              <ChevronRight className="w-15 h-20 " strokeWidth={3} />
+              Continuar <ChevronRight className="w-15 h-20" strokeWidth={3} />
             </button>
           )}
         </div>
       ) : (
-        <div className=" absolute  bottom-40 right-110 z-30 ">
+        <div className="absolute bottom-40 right-115 z-30">
           {genero === "mujer" ? (
             <button
               onClick={handleVerify}
               onMouseEnter={() => playClick()}
-              className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg"
-              style={{
-                fontFamily: "Kavoon, cursive",
-                color: "#ffffff",
-              }}
+              className="text-5xl flex items-center gap-2 bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
+              style={{ fontFamily: "Kavoon, cursive", color: "#8054AE" }}
             >
               Verificar
             </button>
@@ -804,11 +963,8 @@ export default function Exercise({ onExit }) {
             <button
               onClick={handleVerify}
               onMouseEnter={() => playClick()}
-              className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 mt-3 sm:mt-5"
-              style={{
-                fontFamily: "Kavoon, cursive",
-                color: "#FFB212",
-              }}
+              className="text-5xl flex items-center gap-2 bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
+              style={{ fontFamily: "Kavoon, cursive", color: "#FFB212" }}
             >
               Verificar
             </button>
@@ -816,37 +972,45 @@ export default function Exercise({ onExit }) {
         </div>
       )}
 
-      {/* Botón Regresar */}
-      <div className=" absolute  bottom-10 right-25 z-30 ">
+      <div className="absolute bottom-15 right-30 z-30">
         {genero === "mujer" ? (
           <button
-            onClick={() => {handleGoBack(),playAudio()}}
-            onMouseEnter={() => playClick()}
-            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg"
-            style={{
-              fontFamily: "Kavoon, cursive",
-              color: "#ffffff",
+            onClick={() => {
+              handleGoBack();
+              playAudio();
             }}
+            onMouseEnter={() => playClick()}
+            disabled={validationResult === "incorrect"}
+            className={`text-5xl flex items-center gap-2 bg-transparent border-none p-0 transition-all duration-300 mt-3 sm:mt-5 text-shadow-lg ${
+              validationResult === "incorrect"
+                ? "opacity-50 cursor-not-allowed"
+                : "cursor-pointer hover:scale-120 transition-transform"
+            }`}
+            style={{ fontFamily: "Kavoon, cursive", color: "#ffffff" }}
           >
             Regresar
           </button>
         ) : (
           <button
-            onClick={() => {handleGoBack(),playAudio()}}
-            onMouseEnter={() => {playClick()}}
-            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 mt-3 sm:mt-5"
-            style={{
-              fontFamily: "Kavoon, cursive",
-              color: "#FFB212",
+            onClick={() => {
+              handleGoBack();
+              playAudio();
             }}
+            onMouseEnter={() => playClick()}
+            disabled={validationResult === "incorrect"}
+            className={`text-5xl flex items-center gap-2 bg-transparent border-none p-0 transition-all duration-300 mt-3 sm:mt-5 ${
+              validationResult === "incorrect"
+                ? "opacity-50 cursor-not-allowed"
+                : "cursor-pointer hover:scale-120 transition-transform"
+            }`}
+            style={{ fontFamily: "Kavoon, cursive", color: "#ffffff" }}
           >
             Regresar
           </button>
         )}
       </div>
 
-      {/* Botón Reiniciar */}
-  <div className=" absolute  top-58 right-105 z-30 ">
+      <div className="absolute top-58 right-115 z-30">
         {genero === "mujer" ? (
           <button
             onClick={() => {
@@ -854,13 +1018,10 @@ export default function Exercise({ onExit }) {
               handleReset();
             }}
             onMouseEnter={() => playClick()}
-              className=" text-4xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-transform duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg"
-            style={{
-              fontFamily: "Kavoon, cursive",
-              color: "#ffffff",
-            }}
+            className="text-4xl flex items-center gap-2 bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg"
+            style={{ fontFamily: "Kavoon, cursive", color: "#8054AE" }}
           >
-            Reiniciar <RotateCcw className="w-15 h-20 " strokeWidth={3} />
+            Reiniciar <RotateCcw className="w-15 h-20" strokeWidth={3} />
           </button>
         ) : (
           <button
@@ -868,14 +1029,11 @@ export default function Exercise({ onExit }) {
               playClickButton();
               handleReset();
             }}
-            className=" text-4xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
-            style={{
-              fontFamily: "Kavoon, cursive",
-              color: "#FFB212",
-            }}
             onMouseEnter={() => playClick()}
+            className="text-4xl flex items-center gap-2 bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5"
+            style={{ fontFamily: "Kavoon, cursive", color: "#FFB212" }}
           >
-            Reiniciar <RotateCcw className="w-10 h-10 " strokeWidth={3} />
+            Reiniciar <RotateCcw className="w-10 h-10" strokeWidth={3} />
           </button>
         )}
       </div>

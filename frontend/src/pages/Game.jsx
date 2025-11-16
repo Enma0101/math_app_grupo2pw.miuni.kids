@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import { LogOut, Undo, RotateCcw } from "lucide-react";
 import Swal from "sweetalert2";
 
-// Importa tus imágenes
 import Background from "../assets/BackgroundLogin.svg";
 import Backgroundgirl from "../assets/BackgroundLoginGirl.svg";
 import Number2 from "../assets/Number2.png";
@@ -19,70 +18,165 @@ import {
   saveExercisesToStorage,
   clearExercisesByLevel,
   generateCompletelyNewExercises,
-  getStreak,
-  resetStreakLevel
+  mapNivelToId,
 } from "../utils/exerciseGenerator";
-import { useAuth } from "../context/AuthContext";
 
+import { useAuth } from "../context/AuthContext";
 import { useAudio } from "../components/AudioManager";
+import { apiGetProgress, apiGetStarsForLevel, apiGetStreak, apiResetStreak } from "../services/api";
 
 export default function Game() {
+  
   const { state } = useLocation();
   const navigate = useNavigate();
   const { kindOperation, genero, nivel } = state || {};
   const resultado = kindOperation === "Sumas" ? "+" : "-";
-
   const { playClick, playClickButton } = useAudio();
-  const { user } = useAuth();
 
+  const [stars, setStars] = useState(0);
   const [current_streak, setcurrent_streak] = useState(0);
-
   const [exercises, setExercises] = useState([]);
-
+  const [isLoading, setIsLoading] = useState(true);
   const [Bloked, setBloked] = useState({
-    0: true,
-    1: false,
-    2: false,
-    3: false,
-    4: false,
-    5: false,
-    6: false,
-    7: false,
+    0: false, 1: false, 2: false, 3: false,
+    4: false, 5: false, 6: false, 7: false,
   });
 
-  useEffect(() => {
-    if (kindOperation && nivel && user?.id_user) {
-      // Intentar cargar ejercicios existentes
-      const storedExercises = getExercisesFromStorage(
-        user.id_user,
-        kindOperation,
-        nivel,
-        genero
-      );
+  const { token, user } = useAuth(); 
+  const userId = user?.id_user; 
+  const levelId = mapNivelToId(nivel);
 
-      if (storedExercises) {
-        // Si existen, cargarlos
-        setExercises(storedExercises);
+  // Verificar si todos los ejercicios están completados
+  const allExercisesCompleted = Object.values(Bloked).every(value => value === true);
 
-        // Actualizar estado de bloqueados
-        const newBloked = {};
-        storedExercises.forEach((exercise, index) => {
-          newBloked[index] = exercise.is_correct;
-        });
-        setBloked(newBloked);
-      } else {
-        // Si no existen, generar nuevos
-        const newExercises = generateUniqueExercises(kindOperation, nivel);
-        setExercises(newExercises);
-        saveExercisesToStorage(user.id_user, kindOperation, nivel, genero, newExercises);
-      }
-      // Cargar racha acumulada (total) para el usuario/operación
-      if(user?.id_user && kindOperation){
-        const st = getStreak(user.id_user, kindOperation);
-        setcurrent_streak(st.total);
+  const loadStars = async () => {
+    const res = await apiGetStarsForLevel(token, levelId);
+    setStars(res.stars);
+  };
+
+
+  const loadStreak = async () => {
+    if (token && userId && kindOperation && nivel) {
+      try {
+        const streakResponse = await apiGetStreak(token, userId, kindOperation);
+       
+        
+        const streakData = Array.isArray(streakResponse) ? streakResponse[0] : streakResponse;
+        
+        if (streakData) {
+          // Mapear nivel a dificultad
+          let difficulty;
+          if (typeof nivel === 'number') {
+            difficulty = nivel === 1 ? 'facil' : nivel === 2 ? 'medio' : 'dificil';
+          } else {
+            const nivelLower = nivel.toLowerCase();
+            difficulty = nivelLower === 'fácil' ? 'facil' : 
+                        nivelLower === 'medio' ? 'medio' : 'dificil';
+          }
+          
+          const currentLevelStreak = streakData[`${difficulty}_count`] || 0;
+          setcurrent_streak(currentLevelStreak);
+         
+        } else {
+          setcurrent_streak(0);
+        }
+      } catch (error) {
+          
+        setcurrent_streak(0);
       }
     }
-  }, [kindOperation, nivel, genero, user?.id_user]);
+  };
+
+  const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    loadStars();
+    loadStreak();
+  }, [levelId, kindOperation, nivel]);
+
+  useEffect(() => {
+    if (hasInitialized.current) {
+      
+      return;
+    }
+
+    const loadExercises = async () => {
+      if (!kindOperation || !nivel || !userId || !token) {
+        
+        setIsLoading(false);
+        return;
+      }
+
+      hasInitialized.current = true;
+
+      try {
+        setIsLoading(true);
+       
+
+        const storedExercises = await getExercisesFromStorage(
+          kindOperation,
+          nivel,
+          genero,
+          userId,
+          levelId,
+          token
+        );
+
+        if (storedExercises && storedExercises.length > 0) {
+      
+          setExercises(storedExercises);
+
+          const newBloked = {};
+          storedExercises.forEach((exercise, index) => {
+            newBloked[index] = exercise.is_correct === true || exercise.is_correct === 1;
+          });
+          setBloked(newBloked);
+        } else {
+         
+          const newExercises = generateUniqueExercises(kindOperation, nivel);
+
+          
+   
+          await saveExercisesToStorage(
+            kindOperation, 
+            nivel, 
+            genero, 
+            newExercises, 
+            userId, 
+            levelId, 
+            token
+          );
+       
+
+        
+          const freshExercises = await getExercisesFromStorage(
+            kindOperation,
+            nivel,
+            genero,
+            userId,
+            levelId,
+            token
+          );
+
+          if (freshExercises && freshExercises.length > 0) {
+           
+            setExercises(freshExercises);
+          } else {
+           
+            setExercises(newExercises);
+          }
+        }
+      } catch (error) {
+         
+        const newExercises = generateUniqueExercises(kindOperation, nivel);
+        setExercises(newExercises);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadExercises();
+  }, [kindOperation, nivel, genero, userId, token, levelId]);
 
   const handlegoback = () => {
     playClickButton();
@@ -97,21 +191,24 @@ export default function Game() {
 
   const handleResetLevel = async () => {
     playClickButton();
+    
+    if (!userId || !token) {
+     
+      return;
+    }
+
     const result = await Swal.fire({
-      title: `¿Reiniciar ejercicios de ${kindOperation.toUpperCase()} - Nivel ${nivel}?`,
-      text: "Se perderá todo el progreso y se generarán 8 nuevos ejercicios completamente diferentes.",
+      title: `¿Reiniciar ejercicios de ${kindOperation.toUpperCase()} - Nivel ${nivel === 1 ? "Fácil" : nivel === 2 ? "Medio" : nivel === 3 ? "Difícil" : nivel}?`,
+      text: "Se perderá todo el progreso de este nivel y se generarán 8 nuevos ejercicios.",
       icon: "question",
-
       color: "#5c5b5bff",
-  showCancelButton: true,
-      confirmButtonColor: "#4CAF50", 
-      cancelButtonColor: "#F44336", 
-
+      showCancelButton: true,
+      confirmButtonColor: "#4CAF50",
+      cancelButtonColor: "#F44336",
       cancelButtonText: "Cancelar",
       confirmButtonText: "Sí, reiniciar",
-
       customClass: {
-        popup: " font-kavoon shadow-lg alerta-redondeada ",
+        popup: "font-kavoon shadow-lg alerta-redondeada",
         confirmButton: "mi-boton-confirmar",
         cancelButton: "mi-boton-cancelar",
         title: "mi-alerta-titulo",
@@ -120,55 +217,100 @@ export default function Game() {
     });
 
     if (result.isConfirmed) {
-      // Guardar los ejercicios actuales para evitar generar similares
-      const currentExercises = [...exercises];
+      try {
+        const currentExercises = [...exercises];
 
-      // Limpiar ejercicios del nivel y tipo de operación actual
-  clearExercisesByLevel(user.id_user, nivel, kindOperation);
 
-      // Generar nuevos ejercicios que NO se parezcan a los anteriores
-      const newExercises = generateCompletelyNewExercises(
-        kindOperation,
-        nivel,
-        currentExercises
-      );
+        await clearExercisesByLevel(nivel, kindOperation, userId, levelId, token);
+       
+        
+        
+        try {
+          // Mapear nivel a dificultad
+          let difficulty;
+          if (typeof nivel === 'number') {
+            difficulty = nivel === 1 ? 'facil' : nivel === 2 ? 'medio' : 'dificil';
+          } else {
+            const nivelLower = nivel.toLowerCase();
+            difficulty = nivelLower === 'fácil' ? 'facil' : 
+                        nivelLower === 'medio' ? 'medio' : 'dificil';
+          }
 
-      setExercises(newExercises);
-  saveExercisesToStorage(user.id_user, kindOperation, nivel, genero, newExercises);
+          
+          await apiResetStreak(token, {
+            user_id: userId,
+            operation_type: kindOperation,
+            difficulty: difficulty
+          });
+          
+          setcurrent_streak(0); // Resetear visualmente
+        } catch (streakError) {
+    
+        }
+        
 
-      // Resetear todos los bloqueados
-      setBloked({
-        0: false,
-        1: false,
-        2: false,
-        3: false,
-        4: false,
-        5: false,
-        6: false,
-        7: false,
-      });
+        const newExercises = generateCompletelyNewExercises(
+          kindOperation,
+          nivel,
+          currentExercises
+        );
 
-      // Ajustar racha: restar la contribución de este nivel
-      if(user?.id_user && kindOperation){
-        const st = resetStreakLevel(user.id_user, kindOperation, nivel);
-        setcurrent_streak(st.total);
+
+ 
+        await saveExercisesToStorage(
+          kindOperation, 
+          nivel, 
+          genero, 
+          newExercises, 
+          userId, 
+          levelId, 
+          token
+        );
+ 
+
+
+        const freshExercises = await getExercisesFromStorage(
+          kindOperation,
+          nivel,
+          genero,
+          userId,
+          levelId,
+          token
+        );
+
+        if (freshExercises && freshExercises.length > 0) {
+
+          setExercises(freshExercises);
+        } else {
+          setExercises(newExercises);
+        }
+
+        setBloked({
+          0: false, 1: false, 2: false, 3: false,
+          4: false, 5: false, 6: false, 7: false,
+        });
+
+        Swal.fire({
+          title: "¡Reiniciado!",
+          text: "Los ejercicios y la racha del nivel han sido reseteados.",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+          customClass: {
+            popup: "font-kavoon shadow-lg alerta-redondeada",
+          },
+        });
+      } catch (error) {
+         
+        Swal.fire({
+          title: "Error",
+          text: "No se pudieron resetear los ejercicios",
+          icon: "error",
+          customClass: {
+            popup: "font-kavoon shadow-lg alerta-redondeada",
+          },
+        });
       }
-
-      // Mostrar confirmación
-      Swal.fire({
-        title: "¡Reiniciado!",
-        text: "Los ejercicios han sido regenerados.",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-        customClass: {
-          popup: "font-kavoon shadow-lg alerta-redondeada ",
-          confirmButton: "mi-boton-confirmar",
-          cancelButton: "mi-boton-cancelar",
-          title: "mi-alerta-titulo",
-          htmlContainer: "mi-alerta-texto",
-        },
-      });
     }
   };
 
@@ -181,15 +323,27 @@ export default function Game() {
           exerciseIndex: index,
           kindOperation: kindOperation,
           genero: genero,
-          nivel: nivel,
+          nivel: levelId,
           allExercises: exercises,
+          stars: stars
         },
       });
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="h-screen bg-gradient-to-b from-blue-400 to-blue-300 text-white flex items-center justify-center">
+        <h2 className="text-5xl" style={{ fontFamily: "Kavoon, cursive" }}>
+          Cargando ejercicios...
+        </h2>
+      </div>
+    );
+  }
+
+
   return (
-  <div className="h-screen bg-linear-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="h-screen bg-gradient-to-b from-blue-400 to-blue-300 flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {/* Imagen de fondo */}
 
       {genero === "mujer" ? (
@@ -206,6 +360,11 @@ export default function Game() {
           alt="Background"
           className="absolute w-full h-full object-cover object-center"
         />
+      )}
+
+      {/* Overlay oscuro cuando todos los ejercicios están completados */}
+      {allExercisesCompleted && (
+        <div className="absolute inset-0 bg-black/60 z-40" />
       )}
 
       <div
@@ -327,7 +486,8 @@ export default function Game() {
                         color: "#ffff",
                       }}
                     >
-                    ¡Vamos a Sumar!
+                      Nivel: {nivel === 1 ? "Fácil" : nivel === 2 ? "Medio" : nivel === 3 ? "Difícil" : nivel}
+                    
                     </span>
                   </h1>
                 ) : (
@@ -338,7 +498,7 @@ export default function Game() {
                       color: "#852526",
                     }}
                   >
-                  ¡Vamos a Restar!{" "}
+                    ¡Vamos a Restar!{" "}
                     <span
                       style={{
                         display: "block",
@@ -347,7 +507,8 @@ export default function Game() {
                         color: "#ffff",
                       }}
                     >
-                    ¡Vamos a Restar!
+                    Nivel: {nivel === 1 ? "Fácil" : nivel === 2 ? "Medio" : nivel === 3 ? "Difícil" : nivel}
+                   
                     </span>
                   </h1>
                 )
@@ -368,7 +529,8 @@ export default function Game() {
                       color: "#262A51",
                     }}
                   >
-                    ¡Vamos a Sumar!
+                  Nivel: {nivel === 1 ? "Fácil" : nivel === 2 ? "Medio" : nivel === 3 ? "Difícil" : nivel}
+                    
                   </span>
                 </h1>
               ) : (
@@ -388,7 +550,7 @@ export default function Game() {
                       color: "#262A51",
                     }}
                   >
-                    ¡Vamos a Restar!
+                   Nivel: {nivel === 1 ? "Fácil" : nivel === 2 ? "Medio" : nivel === 3 ? "Difícil" : nivel}
                   </span>
                 </h1>
               )}
@@ -423,20 +585,20 @@ export default function Game() {
         </nav>
       </div>
 
-      <div className="absolute top-50 right-0 w-30 h-50 z-50">
+      <div className="absolute top-40 right-0 w-30 h-35 z-50">
         <img
           src={Number8}
           alt="number8"
-          className="w-45 h-50 object-contain"
+          className="w-30 h-35 object-contain"
           draggable={false}
         />
       </div>
 
-      <div className="absolute bottom-5 left-0 w-40 h-40  z-50">
+      <div className="absolute bottom-5 left-0 w-30 h-30  z-50">
         <img
           src={Number4}
           alt="number4"
-          className="w-40 h-40 object-contain"
+          className="w-30 h-30 object-contain"
           draggable={false}
         />
       </div>
@@ -532,7 +694,7 @@ export default function Game() {
               </div>
             ) : null}
 
-            {/* REEMPLAZAR TUS 8 BOTONES POR ESTO: */}
+         
             {exercises.map((exercise, index) => {
               const marginClass = index % 4 === 0 ? "ml-4" : "ml-8";
 
@@ -627,62 +789,99 @@ export default function Game() {
         </div>
       </div>
 
-      <div className=" absolute flex items-center  bottom-10 right-20 z-30 ">
-        {/* Botón regresar */}
-        {genero === "mujer" ? (
-          <button
-            onClick={handlegoback}
-            onMouseEnter={() => playClick()}
-            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-transform duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg mr-15"
-            style={{
-              fontFamily: "Kavoon, cursive",
-              color: "#ffffff",
-            }}
-          >
-            Regresar
-          </button>
-        ) : (
-          <button
-            onClick={handlegoback}
-            onMouseEnter={() => playClick()}
-            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-transform duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg mr-15"
-            style={{
-              fontFamily: "Kavoon, cursive",
-              color: "#FFB212",
-            }}
-          >
-            Regresar
-          </button>
-        )}
-      </div>
-      <div className=" absolute flex items-center  bottom-10 left-50 z-30 ">
-      {/* Botón reiniciar */}
-        {genero === "mujer" ? (
-          <button
-            onClick={handleResetLevel}
-            onMouseEnter={() => playClick()}
-            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-transform duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg mr-15"
-            style={{
-              fontFamily: "Kavoon, cursive",
-              color: "#ffffff",
-            }}
-          >
-            Reiniciar <RotateCcw className="w-10 h-10 " strokeWidth={3} />
-          </button>
-        ) : (
-          <button
-            onClick={handleResetLevel}
-            onMouseEnter={() => playClick()}
-            className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-transform duration-300 hover:scale-120 mt-3 sm:mt-5 text-shadow-lg mr-15"
-            style={{
-              fontFamily: "Kavoon, cursive",
-              color: "#FFB212",
-            }}
-          >
-            Reiniciar <RotateCcw className="w-10 h-10 " strokeWidth={3} />
-          </button>
-        )}
-      </div>
+      {/* Botón de reiniciar centrado cuando todos los ejercicios están completados */}
+      {allExercisesCompleted && (
+        <div className="absolute inset-0 flex items-center justify-center z-50">
+          <div className="text-center">
+            <h2
+              className="text-7xl mb-10 text-shadow-lg"
+              style={{
+                fontFamily: "Kavoon, cursive",
+                color: genero === "mujer" ? "#ffffff" : "#FFB212",
+              }}
+            >
+              ¡Nivel Completado!
+            </h2>
+            <button
+              onClick={handleResetLevel}
+              onMouseEnter={() => playClick()}
+              className="text-6xl flex items-center gap-4 bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-110 transition-transform text-shadow-lg mx-auto"
+              style={{
+                fontFamily: "Kavoon, cursive",
+                color: genero === "mujer" ? "#ffffff" : "#FFB212",
+              }}
+            >
+              Reiniciar Nivel <RotateCcw className="w-15 h-15" strokeWidth={3} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Botones inferiores - solo se muestran si NO todos los ejercicios están completados */}
+      {!allExercisesCompleted && (
+        <>
+          <div className=" absolute flex items-center  bottom-10 right-20 z-30 ">
+            {/* Botón regresar */}
+            {genero === "mujer" ? (
+              <button
+                onClick={handlegoback}
+                onMouseEnter={() => playClick()}
+                className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
+                style={{
+                  fontFamily: "Kavoon, cursive",
+                  color: "#ffffff",
+                }}
+              >
+                Regresar
+              </button>
+              
+            ) : (
+              <button
+                onClick={handlegoback}
+                onMouseEnter={() => playClick()}
+                className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
+                style={{
+                  fontFamily: "Kavoon, cursive",
+                  color: "#FFB212",
+                }}
+              >
+                Regresar
+                </button>
+            ) }
+           
+          </div>
+          
+          <div className=" absolute flex items-center  bottom-10 left-40 z-30 ">
+            {/* Botón reiniciar */}
+            {genero === "mujer" ? (
+              <button
+                onClick={handleResetLevel}
+                onMouseEnter={() => playClick()}
+                className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
+                style={{
+                  fontFamily: "Kavoon, cursive",
+                  color: "#ffffff",
+                }}
+              >
+                Reiniciar <RotateCcw className="w-10 h-10 " strokeWidth={3} />
+              </button>
+            ) : (
+              <button
+                onClick={handleResetLevel}
+                onMouseEnter={() => playClick()}
+                className=" text-5xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-120 transition-transform mt-3 sm:mt-5 text-shadow-lg mr-15"
+                style={{
+                  fontFamily: "Kavoon, cursive",
+                  color: "#FFB212",
+                }}
+              >
+                Reiniciar <RotateCcw className="w-10 h-10 " strokeWidth={3} />
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
+            

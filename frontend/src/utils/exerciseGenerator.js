@@ -1,21 +1,31 @@
-// exerciseGenerator.js
-// Archivo de utilidades para generar ejercicios matemáticos únicos
+import { 
+  apiSaveExercises, 
+  apiGetUserExercises, 
+  apiUpdateExercise, 
+  apiDeleteLevelExercises 
+} from '../services/api';
 
 /**
  * Genera un dígito aleatorio según el nivel de dificultad
- * @param {string} nivel - "Facil", "Medio", o "Dificil"
- * @returns {number} - Dígito entre 1 y el máximo según nivel
+ * @param {string|number} nivel - "Fácil", "Medio", "Difícil" o 1, 2, 3
+ * @returns {number} 
  */
 export const generateDigitByNivel = (nivel) => {
+  // Normalizar nivel si viene como número
+  let normalizedNivel = nivel;
+  if (typeof nivel === 'number') {
+    normalizedNivel = nivel === 1 ? 'Fácil' : nivel === 2 ? 'Medio' : 'Difícil';
+  }
+
   let maxDigit;
-  switch(nivel) {
-    case "Facil":
+  switch(normalizedNivel) {
+    case "Fácil":
       maxDigit = 4; // Dígitos de 1-4
       break;
     case "Medio":
       maxDigit = 7; // Dígitos de 1-7
       break;
-    case "Dificil":
+    case "Difícil":
       maxDigit = 9; // Dígitos de 1-9
       break;
     default:
@@ -26,7 +36,7 @@ export const generateDigitByNivel = (nivel) => {
 
 /**
  * Genera un número de 4 dígitos según el nivel de dificultad
- * @param {string} nivel - "Facil", "Medio", o "Dificil"
+ * @param {string|number} nivel - "Fácil", "Medio", "Difícil" o 1, 2, 3
  * @returns {number} - Número de 4 dígitos
  */
 export const generateNumberByNivel = (nivel) => {
@@ -49,20 +59,20 @@ export const exerciseExists = (exercises, num1, num2) => {
   return exercises.some(
     (ex) => 
       (ex.number1 === num1 && ex.number2 === num2) ||
-      (ex.number1 === num2 && ex.number2 === num1) // También verifica inverso
+      (ex.number1 === num2 && ex.number2 === num1) 
   );
 };
 
 /**
  * Genera un ejercicio único según nivel de dificultad
  * @param {string} operationType - "Sumas" o "Restas"
- * @param {string} nivel - "Facil", "Medio", o "Dificil"
+ * @param {string|number} nivel - "Fácil", "Medio", "Difícil" o 1, 2, 3
  * @param {Array} existingExercises - Array de ejercicios ya generados
  * @returns {Object} - Objeto con el ejercicio generado
  */
 export const generateUniqueExercise = (operationType, nivel, existingExercises) => {
   let num1, num2, attempts = 0;
-  const maxAttempts = 100; // Prevenir loops infinitos
+  const maxAttempts = 100; 
   
   do {
     num1 = generateNumberByNivel(nivel);
@@ -94,7 +104,6 @@ export const generateUniqueExercise = (operationType, nivel, existingExercises) 
     : num1 - num2;
   
   return {
-    id_exercise: Date.now() + Math.random(), // ID temporal único
     operation_type: operationType,
     number1: num1,
     number2: num2,
@@ -109,7 +118,7 @@ export const generateUniqueExercise = (operationType, nivel, existingExercises) 
 /**
  * Genera 8 ejercicios únicos
  * @param {string} operationType - "Sumas" o "Restas"
- * @param {string} nivel - "Facil", "Medio", o "Dificil"
+ * @param {string|number} nivel - "Fácil", "Medio", "Difícil" o 1, 2, 3
  * @returns {Array} - Array con 8 ejercicios únicos
  */
 export const generateUniqueExercises = (operationType, nivel) => {
@@ -124,77 +133,106 @@ export const generateUniqueExercises = (operationType, nivel) => {
 };
 
 /**
- * Guarda ejercicios en localStorage
+ * Guarda ejercicios en la base de datos
  * @param {string} kindOperation - "Sumas" o "Restas"
- * @param {string} nivel - "Facil", "Medio", o "Dificil"
- * @param {string} genero - "mujer" o "hombre"
+ * @param {string|number} nivel - "Fácil", "Medio", "Difícil" o 1, 2, 3
+ * @param {string} genero - "mujer" o "hombre" (ya no se usa en BD pero se mantiene por compatibilidad)
  * @param {Array} exercises - Array de ejercicios a guardar
+ * @param {number} userId - ID del usuario
+ * @param {number} levelId - ID del nivel (1: facil, 2: medio, 3: dificil)
+ * @param {string} token - Token de autenticación
+ * @returns {Promise<Object>} - Respuesta del servidor
  */
-export const saveExercisesToStorage = (userId, kindOperation, nivel, genero, exercises) => {
-  if(!userId) return;
-  const storageKey = `exercises_${userId}_${kindOperation}_${nivel}_${genero}`;
-  localStorage.setItem(storageKey, JSON.stringify(exercises));
-};
-
-/**
- * Obtiene ejercicios desde localStorage
- * @param {string} kindOperation - "Sumas" o "Restas"
- * @param {string} nivel - "Facil", "Medio", o "Dificil"
- * @param {string} genero - "mujer" o "hombre"
- * @returns {Array|null} - Array de ejercicios o null si no existen
- */
-export const getExercisesFromStorage = (userId, kindOperation, nivel, genero) => {
-  if(!userId) return null;
-  const newKey = `exercises_${userId}_${kindOperation}_${nivel}_${genero}`;
-  const storedNew = localStorage.getItem(newKey);
-  if(storedNew) return JSON.parse(storedNew);
-  // Intentar migración desde clave antigua (sin userId) solo una vez
-  const legacyKey = `exercises_${kindOperation}_${nivel}_${genero}`;
-  const legacy = localStorage.getItem(legacyKey);
-  if(legacy){
-    // Migrar y eliminar legacy para evitar que otro usuario la copie
-    localStorage.setItem(newKey, legacy);
-    localStorage.removeItem(legacyKey);
-    return JSON.parse(legacy);
+export const saveExercisesToStorage = async (kindOperation, nivel, genero, exercises, userId, levelId, token) => {
+  try {
+    const payload = {
+      user_id: userId,
+      level_id: levelId,
+      operation_type: kindOperation, // "Sumas" o "Restas"
+      exercises: exercises.map(ex => ({
+        number1: ex.number1,
+        number2: ex.number2,
+        correct_result: ex.correct_result
+      }))
+    };
+    
+    const data = await apiSaveExercises(token, payload);
+    return data;
+    
+  } catch (error) {
+    throw error;
   }
-  return null;
 };
 
 /**
- * Actualiza un ejercicio específico en localStorage
+ * Obtiene ejercicios desde la base de datos
  * @param {string} kindOperation - "Sumas" o "Restas"
- * @param {string} nivel - "Facil", "Medio", o "Dificil"
+ * @param {string|number} nivel - "Fácil", "Medio", "Difícil" o 1, 2, 3
  * @param {string} genero - "mujer" o "hombre"
- * @param {number} exerciseIndex - Índice del ejercicio a actualizar
- * @param {Object} updatedExercise - Ejercicio actualizado
+ * @param {number} userId - ID del usuario
+ * @param {number} levelId - ID del nivel
+ * @param {string} token - Token de autenticación
+ * @returns {Promise<Array|null>} - Array de ejercicios o null
  */
-export const updateExerciseInStorage = (userId, kindOperation, nivel, genero, exerciseIndex, updatedExercise) => {
-  const exercises = getExercisesFromStorage(userId, kindOperation, nivel, genero);
-  if (exercises) {
-    exercises[exerciseIndex] = updatedExercise;
-    saveExercisesToStorage(userId, kindOperation, nivel, genero, exercises);
+export const getExercisesFromStorage = async (kindOperation, nivel, genero, userId, levelId, token) => {
+  try {
+    const data = await apiGetUserExercises(token, userId, levelId, kindOperation);
+    return data;
+    
+  } catch (error) {
+    return null;
+  }
+};
+
+/**
+ * Actualiza un ejercicio específico en la base de datos
+ * @param {string} kindOperation - "Sumas" o "Restas"
+ * @param {string|number} nivel - "Fácil", "Medio", "Difícil" o 1, 2, 3
+ * @param {string} genero - "mujer" o "hombre"
+ * @param {number} exerciseIndex - Índice del ejercicio (ya no se usa)
+ * @param {Object} updatedExercise - Ejercicio actualizado
+ * @param {string} token - Token de autenticación
+ * @returns {Promise<Object>} - Respuesta del servidor
+ */
+export const updateExerciseInStorage = async (kindOperation, nivel, genero, exerciseIndex, updatedExercise, token) => {
+  try {
+    const payload = {
+      user_answer: updatedExercise.user_answer,
+      is_correct: updatedExercise.is_correct ? 1 : 0,
+      solved_at: updatedExercise.solved_at || new Date().toISOString().slice(0, 19).replace('T', ' ')
+    };
+    
+    const data = await apiUpdateExercise(token, updatedExercise.id_exercise, payload);
+    return data;
+    
+  } catch (error) {
+    throw error;
   }
 };
 
 /**
  * Limpia ejercicios de un nivel Y tipo de operación específicos
- * @param {string} nivel - "Facil", "Medio", o "Dificil"
+ * @param {string|number} nivel - "Fácil", "Medio", "Difícil" o 1, 2, 3
  * @param {string} kindOperation - "Sumas" o "Restas"
+ * @param {number} userId - ID del usuario
+ * @param {number} levelId - ID del nivel
+ * @param {string} token - Token de autenticación
+ * @returns {Promise<Object>} - Respuesta del servidor
  */
-export const clearExercisesByLevel = (userId, nivel, kindOperation) => {
-  if(!userId) return;
-  Object.keys(localStorage).forEach((key) => {
-    // Formato nuevo: exercises_{userId}_{kindOperation}_{nivel}_{genero}
-    if (key.startsWith(`exercises_${userId}_${kindOperation}_${nivel}_`)) {
-      localStorage.removeItem(key);
-    }
-  });
+export const clearExercisesByLevel = async (nivel, kindOperation, userId, levelId, token) => {
+  try {
+    const data = await apiDeleteLevelExercises(token, userId, levelId, kindOperation);
+    return data;
+    
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
  * Genera ejercicios únicos que NO se parezcan a ejercicios anteriores
  * @param {string} operationType - "Sumas" o "Restas"
- * @param {string} nivel - "Facil", "Medio", o "Dificil"
+ * @param {string|number} nivel - "Fácil", "Medio", "Difícil" o 1, 2, 3
  * @param {Array} previousExercises - Array de ejercicios anteriores a evitar (opcional)
  * @returns {Array} - Array con 8 ejercicios únicos y diferentes
  */
@@ -211,69 +249,78 @@ export const generateCompletelyNewExercises = (operationType, nivel, previousExe
   return exercises;
 };
 
-// ===================== STREAK (RACHA) UTILITIES =====================
-// Estructura en localStorage por usuario y tipo de operación:
-// Key: streak_{userId}_{operationType}
-// Value: {
-//   total: number,               // racha total acumulada (consecutivos correctos)
-//   levelCounts: { Facil:number, Medio:number, Dificil:number } // aportes por nivel
-// }
-
-const STREAK_LEVELS = ['Facil','Medio','Dificil'];
-
-function buildStreakKey(userId, operationType){
-  return `streak_${userId}_${operationType}`; // operationType: 'Sumas' | 'Restas'
-}
-
-export function getStreak(userId, operationType){
-  if(!userId || !operationType) return { total:0, levelCounts: {Facil:0,Medio:0,Dificil:0} };
-  try {
-    const raw = localStorage.getItem(buildStreakKey(userId, operationType));
-    if(!raw) return { total:0, levelCounts: {Facil:0,Medio:0,Dificil:0} };
-    const parsed = JSON.parse(raw);
-    // asegurar estructura
-    return {
-      total: typeof parsed.total === 'number' ? parsed.total : 0,
-      levelCounts: {
-        Facil: parsed?.levelCounts?.Facil || 0,
-        Medio: parsed?.levelCounts?.Medio || 0,
-        Dificil: parsed?.levelCounts?.Dificil || 0,
-      }
-    };
-  } catch { return { total:0, levelCounts:{Facil:0,Medio:0,Dificil:0} }; }
-}
-
-function saveStreak(userId, operationType, data){
-  if(!userId || !operationType) return;
-  localStorage.setItem(buildStreakKey(userId, operationType), JSON.stringify(data));
-}
-
-// Incrementa racha global y del nivel (solo si se mantiene consecutividad de aciertos)
-export function incrementStreak(userId, operationType, nivel){
-  const streak = getStreak(userId, operationType);
-  // nivel conteo
-  if(!STREAK_LEVELS.includes(nivel)) nivel = 'Facil';
-  streak.levelCounts[nivel] += 1;
-  streak.total += 1;
-  saveStreak(userId, operationType, streak);
-  return streak;
-}
-
-// Reinicia completamente la racha para esa operación (por fallo)
-export function resetStreakOnFailure(userId, operationType){
-  const cleared = { total:0, levelCounts:{Facil:0,Medio:0,Dificil:0} };
-  saveStreak(userId, operationType, cleared);
-  return cleared;
-}
-
-// Reinicia solo la contribución de un nivel (por reinicio de ejercicios del nivel)
-export function resetStreakLevel(userId, operationType, nivel){
-  const streak = getStreak(userId, operationType);
-  if(STREAK_LEVELS.includes(nivel)){
-    const subtract = streak.levelCounts[nivel];
-    streak.total = Math.max(0, streak.total - subtract);
-    streak.levelCounts[nivel] = 0;
-    saveStreak(userId, operationType, streak);
+/**
+ * Mapea el nombre del nivel a su ID
+ * @param {string|number} nivel - "Fácil", "Medio", "Difícil" o 1, 2, 3
+ * @returns {number} - 1, 2, o 3
+ */
+export const mapNivelToId = (nivel) => {
+  if (typeof nivel === 'number') {
+    return nivel;
   }
-  return streak;
-}
+  
+  const nivelMap = {
+    'Fácil': 1,
+    'Medio': 2,
+    'Difícil': 3
+  };
+  return nivelMap[nivel] || 1;
+};
+
+export const getStreak = async (token, userId, operationType) => {
+  try {
+    const { apiGetStreak } = await import('../services/api');
+    const data = await apiGetStreak(token, userId, operationType);
+    return data;
+  } catch (error) {
+    return { total: 0, levelCounts: { Fácil: 0, Medio: 0, Difícil: 0 } };
+  }
+};
+
+/**
+ * Incrementa la racha cuando el usuario responde correctamente
+ */
+export const incrementStreak = async (token, userId, operationType, nivel) => {
+  try {
+    const { apiUpdateStreak } = await import('../services/api');
+    const data = await apiUpdateStreak(token, {
+      user_id: userId,
+      operation_type: operationType,
+      nivel: nivel,
+      action: 'increment'
+    });
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Reinicia la racha cuando el usuario falla
+ */
+export const resetStreakOnFailure = async (token, userId, operationType) => {
+  try {
+    const { apiUpdateStreak } = await import('../services/api');
+    const data = await apiUpdateStreak(token, {
+      user_id: userId,
+      operation_type: operationType,
+      action: 'reset'
+    });
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Actualiza ejercicio en BD (versión simplificada para Exercise.jsx)
+ */
+export const updateExerciseInDB = async (token, exerciseId, payload) => {
+  try {
+    const { apiUpdateExercise } = await import('../services/api');
+    const data = await apiUpdateExercise(token, exerciseId, payload);
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};

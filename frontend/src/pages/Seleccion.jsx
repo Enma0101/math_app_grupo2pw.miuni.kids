@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate , useLocation, Navigate } from "react-router-dom";
 import { LogOut, Undo } from "lucide-react";
 
-// Importa tus imágenes
+
 import Background from "../assets/BackgroundLogin.svg";
 import Backgroundgirl from "../assets/BackgroundLoginGirl.svg";
 import Number2 from "../assets/Number2.png";
@@ -18,43 +18,46 @@ import StarG from "../assets/StarGreen.png";
 
 import { useAudio, AudioControl } from "../components/AudioManager";
 import { useAuth } from "../context/AuthContext";
-import { apiSelectExercise } from "../services/api";
+import { apiGetStars } from "../services/api";
+
 
 export default function Seleccion() {
    const { playClick,playClickButton ,playAudio } = useAudio();
  // Auth
   const { token, user } = useAuth();
  // Estado para almacenar el género seleccionado
+
  
-  const [userName, setUserName] = useState("Enmanuel");
-  const [TotalStar, setTotalStar] = useState(100);
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { kindOperation, genero } = state || {};
+    const [TotalStar,setTotalStar] = useState();
+  const { kindOperation} = state || {};
 
   const handleActivity = async (nivel) => {
-    // Mapear nivel a id
-    const levelMap = { "Facil": 1, "Medio": 2, "Dificil": 3 };
-    const levelId = levelMap[nivel] || 1;
-    // Enviar selección al backend (no bloqueante para la UX)
-    try {
-      if (token && user?.id_user && kindOperation) {
-        await apiSelectExercise(token, {
-          user_id: user.id_user,
-          level_id: levelId,
-          operation_type: kindOperation
-        });
-      }
-    } catch (e) {
-      // No alterar la lógica/flujo de front; seguimos navegando igual
-      console.warn('No se pudo registrar la selección:', e?.message);
-    } finally {
+   
       navigate("/Game", {
         state: { kindOperation: kindOperation, genero: genero, nivel: nivel },
       });
-    }
+    
   };
+  
+ 
+  useEffect(() => {
+    const loadProgress = async () => {
+      if (user?.id_user && token) {
+        try {
+        const progressData = await apiGetStars(token, user.id_user);
+          setTotalStar(progressData?.total_stars || 0);
+        } catch (error) {
+         
+        }
+      }
+    };
 
+    loadProgress();
+  }, [user?.id_user, token]);
+  
+    const genero = user.gender;
   // 'mujer' o 'hombre'
 
   return (
@@ -331,7 +334,7 @@ export default function Seleccion() {
             className=" relative text-2xl md:text-7xl mb-2 inline-block bg-clip-text text-transparent bottom-10 text-2xl md:text-7xl mb-2"
             style={{
               fontFamily: "Kavoon, cursive",
-              backgroundImage: "linear-gradient(to right, #ED06E5, #5F005C)",
+              backgroundImage: "linear-gradient(to right, #FF9254, #FFB212)",
             }}
           >
             {TotalStar}
@@ -405,7 +408,7 @@ export default function Seleccion() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-30">
         {/* Botón Sumar */}
         <button
-          onClick={() =>{ handleActivity("Facil"); playClickButton()}}
+          onClick={() =>{ handleActivity("Fácil"); playClickButton()}}
           className={` group relative rounded-3xl  bottom-70 w-100 h-60 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
             ${
               genero === "mujer"
@@ -429,7 +432,7 @@ export default function Seleccion() {
                     textShadow: "-5px 0px #852526",
                   }}
                 >
-                  Facil
+                  Fácil
                 </span>
               </div>
             ) : (
@@ -442,7 +445,7 @@ export default function Seleccion() {
                     textShadow: "-8px 0px #262A51",
                   }}
                 >
-                  Facil
+                  Fácil
                 </span>
               </div>
             )}
@@ -494,7 +497,7 @@ export default function Seleccion() {
           </div>
         </button>
         <button
-          onClick={() => {handleActivity("Dificil"); playClickButton();  } }
+          onClick={() => {handleActivity("Difícil"); playClickButton();  } }
           className={` group relative rounded-3xl p-10 bottom-70 w-100 h-60 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
             ${
               genero === "mujer"
@@ -518,7 +521,7 @@ export default function Seleccion() {
                     textShadow: "-5px 0px #852526",
                   }}
                 >
-                  Dificil
+                  Difícil
                 </span>
               </div>
             ) : (
@@ -531,47 +534,14 @@ export default function Seleccion() {
                     textShadow: "-8px 0px #262A51",
                   }}
                 >
-                  Dificil
+                  Difícil
                 </span>
               </div>
             )}
           </div>
         </button>
       </div>
-      <div className=" absolute bottom-10 left-10 ">
-        {/* Botón Cerrar sesión */}
-        {genero === "mujer" ? (
-          <button
-            onClick={() => {
-              // Tu lógica aqui
-            }}
-            className=" text-6xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
-            style={{
-              fontFamily: "Kavoon, cursive",
-              color: "#5F005C",
-              filter: "url(#inner-shadow)",
-            }}
-          >
-            Cerrar sesión
-            <LogOut className="w-20 h-20 " strokeWidth={3} />
-          </button>
-        ) : (
-          <button
-            onClick={() => {
-              // Tu lógica aqui
-            }}
-            className=" text-6xl  flex items-center gap-2  bg-transparent border-none cursor-pointer p-0 transition-all duration-300 hover:scale-105 transition-transform mt-3 sm:mt-5"
-            style={{
-              fontFamily: "Kavoon, cursive",
-              color: "#262A51",
-              filter: "url(#inner-shadow)",
-            }}
-          >
-            Cerrar sesión
-            <LogOut className="w-20 h-20 " strokeWidth={3} />
-          </button>
-        )}
-      </div>
+     
 
       <div className=" absolute  bottom-10 right-10 ">
         {/* Botón regresar */}

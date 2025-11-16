@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Swal from 'sweetalert2';
-// Importa tus imágenes
+
 import Background from '../assets/BackgroundLogin.svg';
 import kidImage from '../assets/Child.png';
 import Numbers837 from '../assets/Numeros 8-3-7.png';
